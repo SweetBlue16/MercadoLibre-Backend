@@ -1,22 +1,29 @@
 'use strict';
-
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('categoria', {
-      id: {
+    await queryInterface.createTable('categoriaproducto', {
+      categoriaid: {
         allowNull: false,
-        autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER,
+        references: {
+          model: 'categoria',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
       },
-      nombre: {
-        type: Sequelize.STRING,
+      productoid: {
         allowNull: false,
-      },
-      protegida: {
-        type: Sequelize.BOOLEAN,
-        defaultValue: false,
+        primaryKey: true,
+        type: Sequelize.INTEGER,
+        references: {
+          model: 'producto',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
       },
       createdAt: {
         allowNull: false,
@@ -28,8 +35,7 @@ module.exports = {
       },
     });
   },
-
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('categoria');
+    await queryInterface.dropTable('categoriaproducto');
   },
 };
