@@ -1,5 +1,5 @@
 const requestIp = require('request-ip');
-const ClaimTypes = require('../utils/claimTypes');
+const ClaimTypes = require('../config/claimtypes');
 const { bitacora } = require('../models');
 
 const bitacoralogger = (req, res, next) => {
@@ -21,3 +21,5 @@ const bitacoralogger = (req, res, next) => {
   };
   next();
 };
+
+module.exports = bitacoralogger;
