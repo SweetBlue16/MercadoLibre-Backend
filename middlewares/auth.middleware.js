@@ -9,15 +9,17 @@ const Authorize = (rol) => {
       const authHeader = req.header('Authorization');
       const error = new Error('Acceso denegado');
       error.statusCode = 401;
-      if (!authHeader.startsWith('Bearer ')) {
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
         return next(error);
       }
 
       const token = authHeader.split(' ')[1];
       const decodedToken = jwt.verify(token, jwtSecret);
 
-      if (rol.split(',').indexOf(decodedToken[ClaimTypes.Role]) == -1) {
-        return next(error);
+      if (rol) {
+        if (rol.split(',').indexOf(decodedToken[ClaimTypes.Role]) == -1) {
+          return next(error);
+        }
       }
 
       req.decodedToken = decodedToken;
@@ -33,9 +35,9 @@ const Authorize = (rol) => {
         res.header('Set-Authorization', nuevoToken);
       }
       next();
-    } catch (error) {
-      error.statusCode = 401;
-      next(error);
+    } catch (err) {
+      err.statusCode = 401;
+      next(err);
     }
   };
 };
