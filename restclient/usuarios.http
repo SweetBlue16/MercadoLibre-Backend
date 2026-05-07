@@ -1,0 +1,83 @@
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiZ3ZlcmFAdXYubXgiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9naXZlbm5hbWUiOiJHdWlsbGVybW8gVmVyYSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IkFkbWluaXN0cmFkb3IiLCJpc3MiOiJTZXJ2aWRvckZlaUpXVCIsImF1ZCI6IkNsaWVudGVzRmVpSldUIiwiaWF0IjoxNzc4MTE1ODE5LCJleHAiOjE3NzgxMTcwMTl9.B7aDMyEzMnHAX0-Q-mE1XnDpONjYW1syLVFKCpu3VSM
+
+POST http://localhost:3000/api/auth
+Content-Type: application/json
+
+{
+    "email": "gvera@uv.mx",
+    "password": "pas9L!rX$4vM@3qTz#Np1K^dA7fW*eHyC8tito"
+}
+
+###
+
+GET http://localhost:3000/api/auth/tiempo
+Authorization: Bearer {{token}}
+
+###
+
+GET http://localhost:3000/api/usuarios
+Authorization: Bearer {{token}}
+
+###
+
+POST http://localhost:3000/api/usuarios
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "nombre": "Usuario de prueba",
+    "email": "usuario@prueba.com",
+    "password": "Prueba1234!",
+    "rol": "Administrador"
+}
+
+###
+
+POST http://localhost:3000/api/usuarios
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "nombre": "Usuario de prueba 2",
+    "email": "usuario2@prueba.com",
+    "password": "Prueba1234!",
+    "rol": "Usuario"
+}
+
+###
+
+POST http://localhost:3000/api/usuarios
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "nombre": "Usuario de prueba 3",
+    "email": "usuario3@prueba.com",
+    "password": "Prueba1234!",
+    "rol": "Usuario"
+}
+
+###
+
+GET http://localhost:3000/api/usuarios
+Authorization: Bearer {{token}}
+
+###
+
+PUT http://localhost:3000/api/usuarios/usuario2@prueba.com
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "usuarioid": "f34ffb09-a915-4f2b-b3f9-9cba69d0141f",
+    "nombre": "Usuario de prueba actualizado",
+    "email": "usuario2@prueba.com",
+    "rol": "Usuario"
+}
+
+###
+
+DELETE http://localhost:3000/api/usuarios/usuario2@prueba.com
+Authorization: Bearer {{token}}
+
+###
