@@ -1,37 +1,28 @@
 const bcrypt = require('bcrypt');
 const { usuario, rol, Sequelize } = require('../models');
-const {
-  GeneraToken,
-  TiempoRestanteToken,
-} = require('../services/jwttoken.service');
+const { GeneraToken, TiempoRestanteToken } = require('../services/jwttoken.service');
 
-let self = {};
-
-self.login = async function (req, res, next) {
+const login = async (req, res, next) => {
   const { email, password } = req.body;
 
   try {
-    let data = await usuario.findOne({
+    const data = await usuario.findOne({
       where: { email: email },
       raw: true,
-      attributes: [
-        'id',
-        'email',
-        'passwordhash',
-        'nombre',
-        [Sequelize.col('rol.nombre'), 'rol'],
-      ],
+      attributes: ['id', 'email', 'passwordhash', 'nombre', [Sequelize.col('rol.nombre'), 'rol']],
       include: { model: rol, attributes: [] },
     });
 
-    if (data === null)
+    if (data === null) {
       return res.status(401).json('Usuario o contraseña incorrectos.');
+    }
 
     const passwordMatch = await bcrypt.compare(password, data.passwordhash);
-    if (!passwordMatch)
+    if (!passwordMatch) {
       return res.status(401).json('Usuario o contraseña incorrectos.');
+    }
 
-    token = GeneraToken(data.email, data.nombre, data.rol);
+    const token = GeneraToken(data.email, data.nombre, data.rol);
     req.bitacora('usuario.login', data.email);
 
     res.status(200).json({
@@ -45,13 +36,15 @@ self.login = async function (req, res, next) {
   }
 };
 
-self.tiempo = async function (req, res, next) {
-  const tiempo = TiempoRestanteToken(req);
-  if (tiempo === null) {
-    res.status(404).send();
+const tiempo = async (req, res, next) => {
+  const tiempoRestante = TiempoRestanteToken(req);
+  if (tiempoRestante === null) {
+    return res.status(404).send();
   }
-
-  res.status(200).send(tiempo);
+  res.status(200).send(tiempoRestante);
 };
 
-module.exports = self;
+module.exports = {
+  login,
+  tiempo,
+};

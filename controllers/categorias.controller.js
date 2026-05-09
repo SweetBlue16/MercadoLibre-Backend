@@ -1,15 +1,11 @@
 const { categoria } = require('../models');
 const { body, validationResult } = require('express-validator');
 
-let self = {};
+const categoriaValidator = [body('nombre', 'El campo {0} es obligatorio').not().isEmpty()];
 
-self.categoriaValidator = [
-  body('nombre', 'El campo {0} es obligatorio').not().isEmpty(),
-];
-
-self.getAll = async function (req, res, next) {
+const getAll = async (req, res, next) => {
   try {
-    let data = await categoria.findAll({
+    const data = await categoria.findAll({
       attributes: [['id', 'categoriaId'], 'nombre', 'protegida'],
     });
     res.status(200).json(data);
@@ -18,12 +14,13 @@ self.getAll = async function (req, res, next) {
   }
 };
 
-self.get = async function (req, res, next) {
+const get = async (req, res, next) => {
   try {
-    let id = req.params.id;
-    let data = await categoria.findByPk(id, {
+    const id = req.params.id;
+    const data = await categoria.findByPk(id, {
       attributes: [['id', 'categoriaId'], 'nombre', 'protegida'],
     });
+
     if (data) {
       res.status(200).json(data);
     } else {
@@ -34,12 +31,12 @@ self.get = async function (req, res, next) {
   }
 };
 
-self.create = async function (req, res, next) {
+const create = async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) throw new Error(JSON.stringify(errors));
 
-    let data = await categoria.create({
+    const data = await categoria.create({
       nombre: req.body.nombre,
     });
     req.bitacora('categoria.crear', data.id);
@@ -49,14 +46,14 @@ self.create = async function (req, res, next) {
   }
 };
 
-self.update = async function (req, res, next) {
+const update = async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) throw new Error(JSON.stringify(errors));
 
-    let id = req.params.id;
-    let body = req.body;
-    let data = await categoria.update(body, { where: { id: id } });
+    const id = req.params.id;
+    const bodyReq = req.body;
+    const data = await categoria.update(bodyReq, { where: { id: id } });
 
     if (data[0] === 0) {
       return res.status(404).send();
@@ -69,7 +66,7 @@ self.update = async function (req, res, next) {
   }
 };
 
-self.delete = async function (req, res, next) {
+const eliminar = async (req, res, next) => {
   try {
     const id = req.params.id;
     let data = await categoria.findByPk(id);
@@ -93,4 +90,11 @@ self.delete = async function (req, res, next) {
   }
 };
 
-module.exports = self;
+module.exports = {
+  categoriaValidator,
+  getAll,
+  get,
+  create,
+  update,
+  delete: eliminar,
+};

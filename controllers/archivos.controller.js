@@ -1,11 +1,9 @@
 const { archivo } = require('../models');
 const fs = require('fs');
 
-let self = {};
-
-self.getAll = async function (req, res, next) {
+const getAll = async (req, res, next) => {
   try {
-    let data = await archivo.findAll({
+    const data = await archivo.findAll({
       attributes: [['id', 'archivoid'], 'mime', 'indb', 'nombre', 'size'],
     });
     res.status(200).json(data);
@@ -14,10 +12,10 @@ self.getAll = async function (req, res, next) {
   }
 };
 
-self.getDetalle = async function (req, res, next) {
+const getDetalle = async (req, res, next) => {
   try {
-    let id = req.params.id;
-    let data = await archivo.findByPk(id, {
+    const id = req.params.id;
+    const data = await archivo.findByPk(id, {
       attributes: [['id', 'archivoid'], 'mime', 'indb', 'nombre', 'size'],
     });
 
@@ -31,10 +29,10 @@ self.getDetalle = async function (req, res, next) {
   }
 };
 
-self.get = async function (req, res, next) {
+const get = async (req, res, next) => {
   try {
-    let id = req.params.id;
-    let data = await archivo.findByPk(id);
+    const id = req.params.id;
+    const data = await archivo.findByPk(id);
 
     if (!data) {
       return res.status(404).send();
@@ -49,23 +47,21 @@ self.get = async function (req, res, next) {
   }
 };
 
-self.create = async function (req, res, next) {
+const create = async (req, res, next) => {
   try {
-    console.log(req.file);
-    if (req.file == undefined) {
+    if (req.file === undefined) {
       return res.status(400).json('El archivo es obligatorio.');
     }
 
     let binario = null;
     let indb = false;
-    if (process.env.FILES_IN_DB == 'true') {
+    if (process.env.FILES_IN_DB === 'true') {
       binario = fs.readFileSync('uploads/' + req.file.filename);
-      fs.existsSync('uploads/' + req.file.filename) &&
-        fs.unlinkSync('uploads/' + req.file.filename);
+      fs.existsSync('uploads/' + req.file.filename) && fs.unlinkSync('uploads/' + req.file.filename);
       indb = true;
     }
 
-    let data = await archivo.create({
+    const data = await archivo.create({
       mime: req.file.mimetype,
       indb: indb,
       nombre: req.file.filename,
@@ -85,30 +81,28 @@ self.create = async function (req, res, next) {
   }
 };
 
-self.update = async function (req, res, next) {
+const update = async (req, res, next) => {
   try {
-    if (req.file == undefined) {
+    if (req.file === undefined) {
       return res.status(400).json('El archivo es obligatorio.');
     }
 
-    let id = req.params.id;
-    let imagen = await archivo.findByPk(id);
+    const id = req.params.id;
+    const imagen = await archivo.findByPk(id);
     if (!imagen) {
-      fs.existsSync('uploads/' + req.file.filename) &&
-        fs.unlinkSync('uploads/' + req.file.filename);
+      fs.existsSync('uploads/' + req.file.filename) && fs.unlinkSync('uploads/' + req.file.filename);
       return res.status(404).send();
     }
 
     let binario = null;
     let indb = false;
-    if (process.env.FILES_IN_DB == 'true') {
+    if (process.env.FILES_IN_DB === 'true') {
       binario = fs.readFileSync('uploads/' + req.file.filename);
-      fs.existsSync('uploads/' + req.file.filename) &&
-        fs.unlinkSync('uploads/' + req.file.filename);
+      fs.existsSync('uploads/' + req.file.filename) && fs.unlinkSync('uploads/' + req.file.filename);
       indb = true;
     }
 
-    let data = await imagen.update(
+    const data = await imagen.update(
       {
         mime: req.file.mimetype,
         indb: indb,
@@ -127,8 +121,7 @@ self.update = async function (req, res, next) {
     }
 
     if (!imagen.indb) {
-      fs.existsSync('uploads/' + imagen.nombre) &&
-        fs.unlinkSync('uploads/' + imagen.nombre);
+      fs.existsSync('uploads/' + imagen.nombre) && fs.unlinkSync('uploads/' + imagen.nombre);
     }
     res.status(204).send();
   } catch (error) {
@@ -136,22 +129,22 @@ self.update = async function (req, res, next) {
   }
 };
 
-self.delete = async function (req, res, next) {
+const eliminar = async (req, res, next) => {
   try {
     const id = req.params.id;
-    let imagen = await archivo.findByPk(id);
+    const imagen = await archivo.findByPk(id);
     if (!imagen) {
       return res.status(404).send();
     }
 
-    let data = await imagen.destroy({
+    const data = await imagen.destroy({
       where: { id: id },
     });
+
     if (data === 1) {
       req.bitacora('archivos.eliminar', id);
       if (!imagen.indb) {
-        fs.existsSync('uploads/' + imagen.nombre) &&
-          fs.unlinkSync('uploads/' + imagen.nombre);
+        fs.existsSync('uploads/' + imagen.nombre) && fs.unlinkSync('uploads/' + imagen.nombre);
       }
       return res.status(204).send();
     }
@@ -161,4 +154,11 @@ self.delete = async function (req, res, next) {
   }
 };
 
-module.exports = self;
+module.exports = {
+  getAll,
+  getDetalle,
+  get,
+  create,
+  update,
+  delete: eliminar,
+};

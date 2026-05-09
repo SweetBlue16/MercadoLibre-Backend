@@ -2,18 +2,13 @@ const { producto, categoria, Sequelize } = require('../models');
 const { body, validationResult } = require('express-validator');
 const Op = Sequelize.Op;
 
-let self = {};
-
-self.productoValidator = [
-  body('titulo', 'El campo {0} es obligatorio').not().isEmpty(),
-  body('descripcion', 'El campo {0} es obligatorio').not().isEmpty(),
-  body('precio', 'El campo {0} es obligatorio')
-    .not()
-    .isEmpty()
-    .isDecimal({ force_decimal: false }),
+const productoValidator = [
+  body('titulo', 'El campo titulo es obligatorio').not().isEmpty(),
+  body('descripcion', 'El campo descripcion es obligatorio').not().isEmpty(),
+  body('precio', 'El campo precio es obligatorio').not().isEmpty().isDecimal({ force_decimal: false }),
 ];
 
-self.getAll = async function (req, res, next) {
+const getAll = async (req, res, next) => {
   try {
     const { s } = req.query;
     const filters = {};
@@ -23,15 +18,9 @@ self.getAll = async function (req, res, next) {
       };
     }
 
-    let data = await producto.findAll({
+    const data = await producto.findAll({
       where: filters,
-      attributes: [
-        ['id', 'productoId'],
-        'titulo',
-        'descripcion',
-        'precio',
-        'archivoid',
-      ],
+      attributes: [['id', 'productoId'], 'titulo', 'descripcion', 'precio', 'archivoid'],
       include: {
         model: categoria,
         as: 'categorias',
@@ -46,17 +35,11 @@ self.getAll = async function (req, res, next) {
   }
 };
 
-self.get = async function (req, res, next) {
+const get = async (req, res, next) => {
   try {
-    let id = req.params.id;
-    let data = await producto.findByPk(id, {
-      attributes: [
-        ['id', 'productoId'],
-        'titulo',
-        'descripcion',
-        'precio',
-        'archivoid',
-      ],
+    const id = req.params.id;
+    const data = await producto.findByPk(id, {
+      attributes: [['id', 'productoId'], 'titulo', 'descripcion', 'precio', 'archivoid'],
       include: {
         model: categoria,
         as: 'categorias',
@@ -75,17 +58,18 @@ self.get = async function (req, res, next) {
   }
 };
 
-self.create = async function (req, res, next) {
+const create = async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) throw new Error(JSON.stringify(errors));
 
-    let data = await producto.create({
+    const data = await producto.create({
       titulo: req.body.titulo,
       descripcion: req.body.descripcion,
       precio: req.body.precio,
       archivoid: req.body.archivoid || null,
     });
+
     req.bitacora('producto.crear', data.id);
     res.status(201).json(data);
   } catch (error) {
@@ -93,14 +77,14 @@ self.create = async function (req, res, next) {
   }
 };
 
-self.update = async function (req, res, next) {
+const update = async (req, res, next) => {
   try {
-    const errors = validatationResult(req);
+    const errors = validationResult(req);
     if (!errors.isEmpty()) throw new Error(JSON.stringify(errors));
 
-    let id = req.params.id;
-    let body = req.body;
-    let data = await producto.update(body, { where: { id: id } });
+    const id = req.params.id;
+    const bodyReq = req.body;
+    const data = await producto.update(bodyReq, { where: { id: id } });
 
     if (data[0] === 0) {
       return res.status(404).send();
@@ -112,9 +96,9 @@ self.update = async function (req, res, next) {
   }
 };
 
-self.delete = async function (req, res, next) {
+const eliminar = async (req, res, next) => {
   try {
-    let id = req.params.id;
+    const id = req.params.id;
     let data = await producto.findByPk(id);
     if (!data) {
       return res.status(404).send();
@@ -131,50 +115,53 @@ self.delete = async function (req, res, next) {
   }
 };
 
-self.asignaCategoria = async function (req, res, next) {
+const asignaCategoria = async (req, res, next) => {
   try {
-    let itemToAssign = await categoria.findByPk(req.body.categoriaid);
+    const itemToAssign = await categoria.findByPk(req.body.categoriaid);
     if (!itemToAssign) {
       return res.status(404).send();
     }
 
-    let item = await producto.findByPk(req.params.id);
+    const item = await producto.findByPk(req.params.id);
     if (!item) {
       return res.status(404).send();
     }
 
     await item.addCategoria(itemToAssign);
-    req.bitacora(
-      'productocategoria.agregar',
-      `${req.params.id}:${req.body.categoriaid}`
-    );
+    req.bitacora('productocategoria.agregar', `${req.params.id}:${req.body.categoriaid}`);
     res.status(204).send();
   } catch (error) {
     next(error);
   }
 };
 
-self.eliminaCategoria = async function (req, res, next) {
+const eliminaCategoria = async (req, res, next) => {
   try {
-    let itemToRemove = await categoria.findByPk(req.body.categoriaid);
+    const itemToRemove = await categoria.findByPk(req.body.categoriaid);
     if (!itemToRemove) {
       return res.status(404).send();
     }
 
-    let item = await producto.findByPk(req.params.id);
+    const item = await producto.findByPk(req.params.id);
     if (!item) {
       return res.status(404).send();
     }
 
     await item.removeCategoria(itemToRemove);
-    req.bitacora(
-      'productocategoria.eliminar',
-      `${req.params.id}:${req.body.categoriaid}`
-    );
+    req.bitacora('productocategoria.eliminar', `${req.params.id}:${req.body.categoriaid}`);
     res.status(204).send();
   } catch (error) {
     next(error);
   }
 };
 
-module.exports = self;
+module.exports = {
+  productoValidator,
+  getAll,
+  get,
+  create,
+  update,
+  asignaCategoria,
+  eliminaCategoria,
+  delete: eliminar,
+};

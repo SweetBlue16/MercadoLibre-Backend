@@ -2,18 +2,11 @@ const { usuario, rol, Sequelize } = require('../models');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 
-let self = {};
-
-self.getAll = async function (req, res, next) {
+const getAll = async (req, res, next) => {
   try {
     const data = await usuario.findAll({
       raw: true,
-      attributes: [
-        'id',
-        'email',
-        'nombre',
-        [Sequelize.col('rol.nombre'), 'rol'],
-      ],
+      attributes: ['id', 'nombre', 'email', [Sequelize.col('rol.nombre'), 'rol']],
       include: { model: rol, attributes: [] },
     });
     res.status(200).json(data);
@@ -22,18 +15,13 @@ self.getAll = async function (req, res, next) {
   }
 };
 
-self.get = async function (req, res, next) {
+const get = async (req, res, next) => {
   try {
     const email = req.params.email;
     const data = await usuario.findOne({
       where: { email: email },
       raw: true,
-      attributes: [
-        'id',
-        'email',
-        'nombre',
-        [Sequelize.col('rol.nombre'), 'rol'],
-      ],
+      attributes: ['id', 'nombre', 'email', [Sequelize.col('rol.nombre'), 'rol']],
       include: { model: rol, attributes: [] },
     });
 
@@ -46,7 +34,7 @@ self.get = async function (req, res, next) {
   }
 };
 
-self.create = async function (req, res, next) {
+const create = async (req, res, next) => {
   try {
     const rolusuario = await rol.findOne({ where: { nombre: req.body.rol } });
 
@@ -70,7 +58,7 @@ self.create = async function (req, res, next) {
   }
 };
 
-self.update = async function (req, res, next) {
+const update = async (req, res, next) => {
   try {
     const email = req.params.email;
     const rolusuario = await rol.findOne({ where: { nombre: req.body.rol } });
@@ -88,15 +76,15 @@ self.update = async function (req, res, next) {
   }
 };
 
-self.delete = async function (req, res, next) {
+const eliminar = async (req, res, next) => {
   try {
     const email = req.params.email;
     let data = await usuario.findOne({ where: { email: email } });
 
     if (data.protegido) return res.status(403).send();
 
-    data = await usuario.destroy({ where: { email: email } });
-    if (data === 1) {
+    const result = await usuario.destroy({ where: { email: email } });
+    if (result === 1) {
       req.bitacora('usuarios.eliminar', email);
       return res.status(204).send();
     }
@@ -106,4 +94,10 @@ self.delete = async function (req, res, next) {
   }
 };
 
-module.exports = self;
+module.exports = {
+  getAll,
+  get,
+  create,
+  update,
+  delete: eliminar,
+};
