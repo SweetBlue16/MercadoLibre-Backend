@@ -79,7 +79,7 @@ const update = async (req, res, next) => {
 const eliminar = async (req, res, next) => {
   try {
     const email = req.params.email;
-    let data = await usuario.findOne({ where: { email: email } });
+    const data = await usuario.findOne({ where: { email: email } });
 
     if (data.protegido) return res.status(403).send();
 

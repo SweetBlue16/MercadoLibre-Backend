@@ -36,7 +36,7 @@ const login = async (req, res, next) => {
   }
 };
 
-const tiempo = async (req, res, next) => {
+const tiempo = async (req, res) => {
   const tiempoRestante = TiempoRestanteToken(req);
   if (tiempoRestante === null) {
     return res.status(404).send();

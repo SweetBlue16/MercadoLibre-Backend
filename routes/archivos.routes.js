@@ -9,19 +9,9 @@ router.get('/:id', archivos.get);
 
 router.get('/:id/detalle', Authorize('Administrador'), archivos.getDetalle);
 
-router.post(
-  '/',
-  upload.single('file'),
-  Authorize('Administrador'),
-  archivos.create
-);
+router.post('/', upload.single('file'), Authorize('Administrador'), archivos.create);
 
-router.put(
-  '/:id',
-  upload.single('file'),
-  Authorize('Administrador'),
-  archivos.update
-);
+router.put('/:id', upload.single('file'), Authorize('Administrador'), archivos.update);
 
 router.delete('/:id', Authorize('Administrador'), archivos.delete);
 

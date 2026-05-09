@@ -1,17 +1,14 @@
 const multer = require('multer');
 
 const imageFilter = (req, file, cb) => {
-  if (
-    file.mimetype.startsWith('image/jpeg') &&
-    file.originalname.endsWith('.jpg')
-  ) {
+  if (file.mimetype.startsWith('image/jpeg') && file.originalname.endsWith('.jpg')) {
     cb(null, true);
   } else {
     cb('Sólo se permiten imágenes con extensión JPG', false);
   }
 };
 
-var storage = multer.diskStorage({
+const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, 'uploads/');
   },
@@ -20,5 +17,5 @@ var storage = multer.diskStorage({
   },
 });
 
-var uploadFile = multer({ storage: storage, fileFilter: imageFilter });
+const uploadFile = multer({ storage: storage, fileFilter: imageFilter });
 module.exports = uploadFile;

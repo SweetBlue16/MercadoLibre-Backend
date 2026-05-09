@@ -2,9 +2,8 @@ const fs = require('fs');
 const requestIp = require('request-ip');
 const ClaimTypes = require('../config/claimtypes');
 
-const errorHandler = (err, req, res, next) => {
-  let message =
-    'No se ha podido procesar la petición. Inténtelo nuevamente más tarde.';
+const errorHandler = (err, req, res) => {
+  let message = 'No se ha podido procesar la petición. Inténtelo nuevamente más tarde.';
   const statusCode = err.statusCode || 500;
   const ip = requestIp.getClientIp(req);
 
@@ -15,8 +14,7 @@ const errorHandler = (err, req, res, next) => {
 
   fs.appendFile(
     'log/log.txt',
-    new Date() +
-      ` - ${statusCode} - ${ip} - ${email} - ${err.message || message}\n`,
+    new Date() + ` - ${statusCode} - ${ip} - ${email} - ${err.message || message}\n`,
     (err) => {
       if (err) {
         console.error(err);

@@ -6,32 +6,14 @@ router.get('/', Authorize('Usuario,Administrador'), productos.getAll);
 
 router.get('/:id', Authorize('Usuario,Administrador'), productos.get);
 
-router.post(
-  '/',
-  Authorize('Administrador'),
-  productos.productoValidator,
-  productos.create
-);
+router.post('/', Authorize('Administrador'), productos.productoValidator, productos.create);
 
-router.put(
-  '/:id',
-  Authorize('Administrador'),
-  productos.productoValidator,
-  productos.update
-);
+router.put('/:id', Authorize('Administrador'), productos.productoValidator, productos.update);
 
 router.delete('/:id', Authorize('Administrador'), productos.delete);
 
-router.post(
-  '/:id/categoria',
-  Authorize('Administrador'),
-  productos.asignaCategoria
-);
+router.post('/:id/categoria', Authorize('Administrador'), productos.asignaCategoria);
 
-router.delete(
-  '/:id/categoria/:categoriaid',
-  Authorize('Administrador'),
-  productos.eliminaCategoria
-);
+router.delete('/:id/categoria/:categoriaid', Authorize('Administrador'), productos.eliminaCategoria);
 
 module.exports = router;

@@ -27,12 +27,7 @@ const TiempoRestanteToken = (req) => {
     const minutes = Math.floor(time / 60);
     const segundos = Math.floor(time - minutes * 60);
 
-    return (
-      '00:' +
-      minutes.toString().padStart(2, '0') +
-      ':' +
-      segundos.toString().padStart(2, '0')
-    );
+    return '00:' + minutes.toString().padStart(2, '0') + ':' + segundos.toString().padStart(2, '0');
   } catch (error) {
     return null;
   }

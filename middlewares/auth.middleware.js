@@ -17,17 +17,16 @@ const Authorize = (rol) => {
       const decodedToken = jwt.verify(token, jwtSecret);
 
       if (rol) {
-        if (rol.split(',').indexOf(decodedToken[ClaimTypes.Role]) == -1) {
+        if (rol.split(',').indexOf(decodedToken[ClaimTypes.Role]) === -1) {
           return next(error);
         }
       }
 
       req.decodedToken = decodedToken;
-      var minutosRestantes =
-        (decodedToken.exp - new Date().getTime() / 1000) / 60;
+      const minutosRestantes = (decodedToken.exp - new Date().getTime() / 1000) / 60;
 
       if (minutosRestantes < 5) {
-        var nuevoToken = GeneraToken(
+        const nuevoToken = GeneraToken(
           decodedToken[ClaimTypes.Name],
           decodedToken[ClaimTypes.GivenName],
           decodedToken[ClaimTypes.Role]

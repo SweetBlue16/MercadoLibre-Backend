@@ -8,7 +8,7 @@ dotenv.config();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-var corsOptions = {
+const corsOptions = {
   origin: ['http://localhost:8080', 'http://localhost:8081'],
   methods: 'GET,PUT,POST,DELETE',
 };
