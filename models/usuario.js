@@ -44,13 +44,13 @@ module.exports = (sequelize, DataTypes) => {
       hooks: {
         beforeCreate: async (user) => {
           if (user.passwordhash) {
-            const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS, 10) || 12;
+            const saltRounds = Number.parseInt(process.env.BCRYPT_SALT_ROUNDS, 10) || 12;
             user.passwordhash = await bcrypt.hash(user.passwordhash, saltRounds);
           }
         },
         beforeUpdate: async (user) => {
           if (user.changed('passwordhash')) {
-            const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS, 10) || 12;
+            const saltRounds = Number.parseInt(process.env.BCRYPT_SALT_ROUNDS, 10) || 12;
             user.passwordhash = await bcrypt.hash(user.passwordhash, saltRounds);
           }
         },
