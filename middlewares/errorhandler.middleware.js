@@ -1,7 +1,7 @@
 const requestIp = require('request-ip');
 const ClaimTypes = require('../config/claimtypes');
 
-const errorHandler = (err, req, res, next) => {
+const errorHandler = (err, req, res) => {
   let statusCode = err.statusCode || 500;
   const ip = requestIp.getClientIp(req);
 
