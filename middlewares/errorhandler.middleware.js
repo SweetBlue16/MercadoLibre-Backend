@@ -13,7 +13,7 @@ const errorHandler = (err, req, res) => {
   if (
     err.name === 'SequelizeValidationError' ||
     err.name === 'SequelizeUniqueConstraintError' ||
-    (err.message && err.message.includes('express-validator'))
+    err.message?.includes('express-validator')
   ) {
     statusCode = 400;
   }

@@ -2,9 +2,7 @@
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
-  class bitacora extends Model {
-    static associate() {}
-  }
+  class bitacora extends Model {}
   bitacora.init(
     {
       id: {

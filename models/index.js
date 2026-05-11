@@ -1,9 +1,9 @@
 'use strict';
 
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 const Sequelize = require('sequelize');
-const process = require('process');
+const process = require('node:process');
 const basename = path.basename(__filename);
 const env = process.env.NODE_ENV || 'development';
 const config = require(__dirname + '/../config/config.js')[env];
@@ -18,7 +18,7 @@ if (config.use_env_variable) {
 
 fs.readdirSync(__dirname)
   .filter((file) => {
-    return file.indexOf('.') !== 0 && file !== basename && file.slice(-3) === '.js' && file.indexOf('.test.js') === -1;
+    return !file.startsWith('.') && file !== basename && file.endsWith('.js') && !file.includes('.test.js');
   })
   .forEach((file) => {
     const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
