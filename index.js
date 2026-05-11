@@ -43,8 +43,13 @@ app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/bitacora', require('./routes/bitacora.routes'));
 app.use('/api/roles', require('./routes/roles.routes'));
 app.use('/api/archivos', require('./routes/archivos.routes'));
-app.get('/*splat', (req, res) => {
-  res.status(404).send('Recurso no encontrado');
+app.use((req, res) => {
+  // #swagger.ignore = true
+  res.status(404).json({
+    status: 'error',
+    statusCode: 404,
+    message: 'El recurso o endpoint solicitado no existe en el servidor.',
+  });
 });
 
 const errorHandler = require('./middlewares/errorhandler.middleware');

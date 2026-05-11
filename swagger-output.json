@@ -1,28 +1,67 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "Backend Node.js API",
-    "description": "Esta es una API en Node.js",
-    "version": "1.0.0"
+    "title": "Mercado Libre Seguro - API Backend",
+    "description": "Documentación oficial de la API de Mercado Libre Seguro. Incluye validaciones estrictas, auditoría y blindaje contra CWEs.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Equipo de Desarrollo IOException Team",
+      "url": "https://github.com/SweetBlue16/MercadoLibre-Backend"
+    }
   },
   "host": "localhost:3000",
   "basePath": "/",
+  "tags": [
+    {
+      "name": "Autenticación",
+      "description": "Endpoints para inicio de sesión y gestión de tokens."
+    },
+    {
+      "name": "Usuarios",
+      "description": "Operaciones de CRUD para la gestión de usuarios y roles."
+    },
+    {
+      "name": "Productos",
+      "description": "Catálogo de productos y gestión de categorías asociadas."
+    },
+    {
+      "name": "Categorías",
+      "description": "Administración de categorías del sistema."
+    },
+    {
+      "name": "Archivos",
+      "description": "Subida y visualización segura de imágenes binarias."
+    },
+    {
+      "name": "Bitácora",
+      "description": "Consulta de logs de auditoría (Solo Administradores)."
+    }
+  ],
   "schemes": [
     "http"
   ],
+  "securityDefinitions": {
+    "bearerAuth": {
+      "type": "apiKey",
+      "in": "header",
+      "name": "Authorization",
+      "description": "Introduce el token JWT con el formato: Bearer <token>"
+    }
+  },
+  "consumes": [
+    "application/json",
+    "multipart/form-data"
+  ],
+  "produces": [
+    "application/json"
+  ],
   "paths": {
-    "/*splat": {
-      "get": {
-        "description": "",
-        "responses": {
-          "404": {
-            "description": "Not Found"
-          }
-        }
-      }
-    },
     "/api/categorias/": {
       "get": {
+        "tags": [
+          "Categorías"
+        ],
+        "summary": "Listar todas las categorías",
         "description": "",
         "parameters": [
           {
@@ -34,11 +73,26 @@
         "responses": {
           "200": {
             "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       },
       "post": {
-        "description": "",
+        "tags": [
+          "Categorías"
+        ],
+        "summary": "Crear nueva categoría",
+        "description": "La entrada se sanitiza (escape) para prevenir ataques Cross-Site Scripting (CWE-79).",
         "parameters": [
           {
             "name": "Authorization",
@@ -52,7 +106,8 @@
               "type": "object",
               "properties": {
                 "nombre": {
-                  "example": "any"
+                  "type": "string",
+                  "example": "Electrónica"
                 }
               }
             }
@@ -60,13 +115,28 @@
         ],
         "responses": {
           "201": {
-            "description": "Created"
+            "description": "Categoría creada con éxito."
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/categorias/{id}": {
       "get": {
+        "tags": [
+          "Categorías"
+        ],
+        "summary": "Obtener una categoría por ID",
         "description": "",
         "parameters": [
           {
@@ -85,12 +155,24 @@
           "200": {
             "description": "OK"
           },
-          "404": {
-            "description": "Not Found"
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       },
       "put": {
+        "tags": [
+          "Categorías"
+        ],
+        "summary": "Actualizar categoría",
         "description": "",
         "parameters": [
           {
@@ -109,13 +191,25 @@
           "204": {
             "description": "No Content"
           },
-          "404": {
-            "description": "Not Found"
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       },
       "delete": {
-        "description": "",
+        "tags": [
+          "Categorías"
+        ],
+        "summary": "Eliminar categoría",
+        "description": "Regla de negocio: El sistema abortará la operación con un 400 Bad Request si se intenta eliminar una categoría marcada como \"protegida\".",
         "parameters": [
           {
             "name": "id",
@@ -131,40 +225,67 @@
         ],
         "responses": {
           "204": {
-            "description": "No Content"
+            "description": "Categoría eliminada."
           },
           "400": {
-            "description": "Bad Request"
+            "description": "La categoría está protegida por el sistema y no puede ser borrada."
           },
-          "404": {
-            "description": "Not Found"
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/productos/": {
       "get": {
-        "description": "",
+        "tags": [
+          "Productos"
+        ],
+        "summary": "Listar productos del catálogo",
+        "description": "Obtiene la lista de productos y sus categorías vinculadas. Soporta búsqueda por coincidencia parcial en el título.",
         "parameters": [
-          {
-            "name": "Authorization",
-            "in": "header",
-            "type": "string"
-          },
           {
             "name": "s",
             "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
             "type": "string"
           }
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "Catálogo recuperado exitosamente."
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       },
       "post": {
-        "description": "",
+        "tags": [
+          "Productos"
+        ],
+        "summary": "Crear un nuevo producto",
+        "description": "Los campos de texto son sanitizados contra XSS (CWE-79). El archivoid debe ser un UUID válido o nulo para mantener la integridad relacional.",
         "parameters": [
           {
             "name": "Authorization",
@@ -178,16 +299,20 @@
               "type": "object",
               "properties": {
                 "titulo": {
-                  "example": "any"
+                  "type": "string",
+                  "example": "Teclado Mecánico"
                 },
                 "descripcion": {
-                  "example": "any"
+                  "type": "string",
+                  "example": "Teclado RGB switch rojo"
                 },
                 "precio": {
-                  "example": "any"
+                  "type": "number",
+                  "example": 1200.5
                 },
                 "archivoid": {
-                  "example": "any"
+                  "type": "string",
+                  "example": "123e4567-e89b-12d3-a456-426614174000"
                 }
               }
             }
@@ -196,12 +321,27 @@
         "responses": {
           "201": {
             "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/productos/{id}": {
       "get": {
+        "tags": [
+          "Productos"
+        ],
+        "summary": "Obtener detalle de un producto",
         "description": "",
         "parameters": [
           {
@@ -220,12 +360,24 @@
           "200": {
             "description": "OK"
           },
-          "404": {
-            "description": "Not Found"
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       },
       "put": {
+        "tags": [
+          "Productos"
+        ],
+        "summary": "Actualizar datos del producto",
         "description": "",
         "parameters": [
           {
@@ -244,12 +396,24 @@
           "204": {
             "description": "No Content"
           },
-          "404": {
-            "description": "Not Found"
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       },
       "delete": {
+        "tags": [
+          "Productos"
+        ],
+        "summary": "Eliminar producto",
         "description": "",
         "parameters": [
           {
@@ -265,18 +429,27 @@
           }
         ],
         "responses": {
-          "204": {
-            "description": "No Content"
+          "401": {
+            "description": "Unauthorized"
           },
-          "404": {
-            "description": "Not Found"
+          "403": {
+            "description": "Forbidden"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/productos/{id}/categoria": {
       "post": {
-        "description": "",
+        "tags": [
+          "Productos"
+        ],
+        "summary": "Asignar categoría a producto",
+        "description": "Crea una asociación en la tabla intermedia producto_categoria.",
         "parameters": [
           {
             "name": "id",
@@ -296,7 +469,8 @@
               "type": "object",
               "properties": {
                 "categoriaid": {
-                  "example": "any"
+                  "type": "number",
+                  "example": 1
                 }
               }
             }
@@ -306,15 +480,27 @@
           "204": {
             "description": "No Content"
           },
-          "404": {
-            "description": "Not Found"
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/productos/{id}/categoria/{categoriaid}": {
       "delete": {
-        "description": "",
+        "tags": [
+          "Productos"
+        ],
+        "summary": "Remover categoría de producto",
+        "description": "Elimina la asociación entre un producto y una categoría específica sin borrar ninguna de las dos entidades.",
         "parameters": [
           {
             "name": "id",
@@ -332,190 +518,38 @@
             "name": "Authorization",
             "in": "header",
             "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "categoriaid": {
-                  "example": "any"
-                }
-              }
-            }
           }
         ],
         "responses": {
           "204": {
             "description": "No Content"
           },
-          "404": {
-            "description": "Not Found"
-          }
-        }
-      }
-    },
-    "/api/usuarios/": {
-      "get": {
-        "description": "",
-        "parameters": [
-          {
-            "name": "Authorization",
-            "in": "header",
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      },
-      "post": {
-        "description": "",
-        "parameters": [
-          {
-            "name": "Authorization",
-            "in": "header",
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "rol": {
-                  "example": "any"
-                },
-                "email": {
-                  "example": "any"
-                },
-                "nombre": {
-                  "example": "any"
-                },
-                "password": {
-                  "example": "any"
-                }
-              }
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "Created"
-          }
-        }
-      }
-    },
-    "/api/usuarios/{email}": {
-      "get": {
-        "description": "",
-        "parameters": [
-          {
-            "name": "email",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "Authorization",
-            "in": "header",
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "404": {
-            "description": "Not Found"
-          }
-        }
-      },
-      "put": {
-        "description": "",
-        "parameters": [
-          {
-            "name": "email",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "Authorization",
-            "in": "header",
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "rol": {
-                  "example": "any"
-                },
-                "rolid": {
-                  "example": "any"
-                }
-              }
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "No Content"
-          },
-          "404": {
-            "description": "Not Found"
-          }
-        }
-      },
-      "delete": {
-        "description": "",
-        "parameters": [
-          {
-            "name": "email",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "Authorization",
-            "in": "header",
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "No Content"
+          "401": {
+            "description": "Unauthorized"
           },
           "403": {
             "description": "Forbidden"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
-    "/api/auth/": {
-      "post": {
+    "/api/usuarios/": {
+      "get": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Listar todos los usuarios",
         "description": "",
         "parameters": [
           {
-            "name": "body",
-            "in": "body",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "email": {
-                  "example": "any"
-                },
-                "password": {
-                  "example": "any"
-                }
-              }
-            }
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
           }
         ],
         "responses": {
@@ -524,102 +558,401 @@
           },
           "401": {
             "description": "Unauthorized"
-          }
-        }
-      }
-    },
-    "/api/auth/tiempo": {
-      "get": {
-        "description": "",
-        "parameters": [
-          {
-            "name": "Authorization",
-            "in": "header",
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
           },
-          "404": {
-            "description": "Not Found"
+          "403": {
+            "description": "Forbidden"
           }
-        }
-      }
-    },
-    "/api/bitacora/": {
-      "get": {
-        "description": "",
-        "parameters": [
+        },
+        "security": [
           {
-            "name": "Authorization",
-            "in": "header",
-            "type": "string"
+            "bearerAuth": []
           }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/roles/": {
-      "get": {
-        "description": "",
-        "parameters": [
-          {
-            "name": "Authorization",
-            "in": "header",
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/archivos/": {
-      "get": {
-        "description": "",
-        "parameters": [
-          {
-            "name": "Authorization",
-            "in": "header",
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
+        ]
       },
       "post": {
-        "description": "",
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Crear un nuevo usuario",
+        "description": "Registra un usuario en la BD. El ID (UUIDv4) es generado automáticamente por la capa de datos. La contraseña es procesada mediante hooks (bcrypt) antes de persistirse, mitigando la exposición de credenciales.",
         "parameters": [
           {
             "name": "Authorization",
             "in": "header",
             "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nombre": {
+                  "type": "string",
+                  "example": "Juan Pérez"
+                },
+                "email": {
+                  "type": "string",
+                  "example": "juan@ejemplo.com"
+                },
+                "password": {
+                  "type": "string",
+                  "example": "PasswordSegura123!"
+                },
+                "rol": {
+                  "type": "string",
+                  "example": "Administrador"
+                }
+              }
+            }
           }
         ],
         "responses": {
           "201": {
             "description": "Created"
           },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/usuarios/{email}": {
+      "get": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Buscar usuario por email",
+        "description": "",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Actualizar datos de usuario",
+        "description": "",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Eliminar usuario",
+        "description": "Regla de negocio: Fallará con un error 403 si se intenta eliminar un usuario con el flag \"protegido\" (ej: SuperAdministrador principal).",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/auth/": {
+      "post": {
+        "tags": [
+          "Autenticación"
+        ],
+        "summary": "Iniciar sesión y obtener JWT",
+        "description": "Genera un JWT seguro firmado con HS256. Las entradas están fuertemente validadas para evitar inyección SQL (CWE-89) y desbordamientos.",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Credenciales de acceso",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "type": "string",
+                  "example": "admin@test.com"
+                },
+                "password": {
+                  "type": "string",
+                  "example": "password123"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Autenticación exitosa, retorna el JWT."
+          },
           "400": {
-            "description": "Bad Request"
+            "description": "Datos mal formados detectados por express-validator."
+          },
+          "401": {
+            "description": "Credenciales incorrectas (Manejo genérico para evitar filtración de usuarios existentes)."
           }
         }
+      }
+    },
+    "/api/auth/tiempo": {
+      "get": {
+        "tags": [
+          "Autenticación"
+        ],
+        "summary": "Consultar tiempo restante del token",
+        "description": "",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/bitacora/": {
+      "get": {
+        "tags": [
+          "Bitácora"
+        ],
+        "summary": "Consultar log de auditoría",
+        "description": "Devuelve el registro histórico de acciones críticas (CRUD y accesos) de la plataforma. Este endpoint está fuertemente restringido.",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Log de auditoría devuelto exitosamente."
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Acceso denegado."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/roles/": {
+      "get": {
+        "tags": [
+          "Roles"
+        ],
+        "summary": "Obtener catálogo de roles",
+        "description": "Devuelve la lista de roles estáticos disponibles para asignación (ej: Usuario, Administrador).",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/archivos/": {
+      "get": {
+        "tags": [
+          "Archivos"
+        ],
+        "summary": "Listar todos los archivos (Solo Admin)",
+        "description": "Obtiene los metadatos de todos los archivos almacenados en el sistema.",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de archivos obtenida correctamente."
+          },
+          "401": {
+            "description": "Falta el token de autorización o expiró."
+          },
+          "403": {
+            "description": "El usuario no tiene rol de Administrador."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Archivos"
+        ],
+        "summary": "Subir un nuevo archivo de imagen",
+        "description": "Endpoint blindado contra CWE-434 (Subida de archivos peligrosos). Valida estrictamente extensiones y MIME Types permitiendo solo imágenes. Renombra automáticamente el archivo con UUIDv4.",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "file",
+            "in": "formData",
+            "type": "file",
+            "required": true,
+            "description": "Archivo de imagen a subir (Max 5MB)."
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Archivo almacenado exitosamente."
+          },
+          "400": {
+            "description": "Tipo de archivo no permitido o límite de tamaño excedido."
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/archivos/{id}": {
       "get": {
-        "description": "",
+        "tags": [
+          "Archivos"
+        ],
+        "summary": "Obtener binario de imagen",
+        "description": "Devuelve el archivo binario. El ID del archivo está protegido contra inyección (CWE-89) mediante sanitización de parámetros.",
         "parameters": [
           {
             "name": "id",
@@ -630,15 +963,22 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "Archivo binario retornado (image/jpeg, image/png, etc)."
           },
           "404": {
-            "description": "Not Found"
+            "description": "Archivo no encontrado física ni lógicamente."
           }
         }
       },
       "put": {
+        "tags": [
+          "Archivos"
+        ],
+        "summary": "Actualizar un archivo existente",
         "description": "",
+        "consumes": [
+          "multipart/form-data"
+        ],
         "parameters": [
           {
             "name": "id",
@@ -650,6 +990,12 @@
             "name": "Authorization",
             "in": "header",
             "type": "string"
+          },
+          {
+            "name": "file",
+            "in": "formData",
+            "type": "file",
+            "required": true
           }
         ],
         "responses": {
@@ -659,13 +1005,25 @@
           "400": {
             "description": "Bad Request"
           },
-          "404": {
-            "description": "Not Found"
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       },
       "delete": {
-        "description": "",
+        "tags": [
+          "Archivos"
+        ],
+        "summary": "Eliminar archivo",
+        "description": "Elimina el registro de la BD y purga el archivo físico del disco de manera segura.",
         "parameters": [
           {
             "name": "id",
@@ -681,16 +1039,28 @@
         ],
         "responses": {
           "204": {
-            "description": "No Content"
+            "description": "Archivo eliminado correctamente."
           },
-          "404": {
-            "description": "Not Found"
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/archivos/{id}/detalle": {
       "get": {
+        "tags": [
+          "Archivos"
+        ],
+        "summary": "Obtener metadatos de un archivo (Solo Admin)",
         "description": "",
         "parameters": [
           {
@@ -709,9 +1079,49 @@
           "200": {
             "description": "OK"
           },
-          "404": {
-            "description": "Not Found"
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
           }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "ErrorResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "example": "error"
+        },
+        "statusCode": {
+          "type": "number",
+          "example": 400
+        },
+        "message": {
+          "type": "string",
+          "example": "Mensaje de error descriptivo"
+        }
+      }
+    },
+    "LoginRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "example": "admin@uv.mx"
+        },
+        "password": {
+          "type": "string",
+          "example": "Password123!"
         }
       }
     }
