@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const usuariosController = require('../controllers/usuarios.controller');
-const validateRequest = require('../middlewares/validation.middleware');
+const validateRequest = require('../middlewares/validator.middleware');
 const { body, param } = require('express-validator');
 const Authorize = require('../middlewares/auth.middleware');
 
@@ -30,14 +30,21 @@ const emailParamRules = [
   param('email').isEmail().withMessage('El parámetro debe ser un email válido').normalizeEmail(),
 ];
 
-router.get('/', Authorize('Administrador'), usuarioRules.getAll);
+router.get('/', Authorize('Administrador'), usuariosController.getAll);
 
-router.get('/:email', Authorize('Administrador'), emailParamRules, validateRequest, usuarioRules.get);
+router.get('/:email', Authorize('Administrador'), emailParamRules, validateRequest, usuariosController.get);
 
-router.post('/', Authorize('Administrador'), usuarioRules, validateRequest, usuarioRules.create);
+router.post('/', Authorize('Administrador'), usuarioRules, validateRequest, usuariosController.create);
 
-router.put('/:email', Authorize('Administrador'), emailParamRules, usuarioRules, validateRequest, usuarioRules.update);
+router.put(
+  '/:email',
+  Authorize('Administrador'),
+  emailParamRules,
+  usuarioRules,
+  validateRequest,
+  usuariosController.update
+);
 
-router.delete('/:email', Authorize('Administrador'), emailParamRules, validateRequest, usuarioRules.delete);
+router.delete('/:email', Authorize('Administrador'), emailParamRules, validateRequest, usuariosController.delete);
 
 module.exports = router;

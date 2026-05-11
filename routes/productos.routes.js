@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const productosController = require('../controllers/productos.controller');
 const validateRequest = require('../middlewares/validator.middleware');
-const { body, params } = require('express-validator');
+const { body, param } = require('express-validator');
 const Authorize = require('../middlewares/auth.middleware');
 
 const productoRules = [
