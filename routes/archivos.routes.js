@@ -1,18 +1,31 @@
 const router = require('express').Router();
-const archivos = require('../controllers/archivos.controller');
+const archivosController = require('../controllers/archivos.controller');
 const Authorize = require('../middlewares/auth.middleware');
 const upload = require('../middlewares/upload.middleware');
+const validateRequest = require('../middlewares/validator.middleware');
+const { param } = require('express-validator');
 
-router.get('/', Authorize('Administrador'), archivos.getAll);
+const idParamRules = [
+  param('id').notEmpty().withMessage('El ID del archivo es obligatorio').isString().trim().escape(),
+];
 
-router.get('/:id', archivos.get);
+router.get('/', Authorize('Administrador'), archivosController.getAll);
 
-router.get('/:id/detalle', Authorize('Administrador'), archivos.getDetalle);
+router.get('/:id', idParamRules, validateRequest, archivosController.get);
 
-router.post('/', upload.single('file'), Authorize('Administrador'), archivos.create);
+router.get('/:id/detalle', Authorize('Administrador'), archivosController.getDetalle);
 
-router.put('/:id', upload.single('file'), Authorize('Administrador'), archivos.update);
+router.post('/', upload.single('file'), Authorize('Administrador'), archivosController.create);
 
-router.delete('/:id', Authorize('Administrador'), archivos.delete);
+router.put(
+  '/:id',
+  upload.single('file'),
+  Authorize('Administrador'),
+  idParamRules,
+  validateRequest,
+  archivosController.update
+);
+
+router.delete('/:id', Authorize('Administrador'), idParamRules, validateRequest, archivosController.delete);
 
 module.exports = router;

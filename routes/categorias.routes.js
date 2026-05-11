@@ -1,15 +1,38 @@
 const router = require('express').Router();
-const categorias = require('../controllers/categorias.controller');
+const categoriasController = require('../controllers/categorias.controller');
+const validateRequest = require('../middlewares/validator.middleware');
+const { body, param } = require('express-validator');
 const Authorize = require('../middlewares/auth.middleware');
 
-router.get('/', Authorize('Usuario,Administrador'), categorias.getAll);
+const categoriaRules = [
+  body('nombre')
+    .notEmpty()
+    .withMessage('El nombre de la categoría es obligatorio')
+    .isString()
+    .withMessage('El nombre debe ser una cadena de texto')
+    .trim()
+    .escape(),
+];
 
-router.get('/:id', Authorize('Usuario,Administrador'), categorias.get);
+const idParamRules = [
+  param('id').notEmpty().withMessage('El ID es obligatorio').isInt().withMessage('El ID debe ser un número entero'),
+];
 
-router.post('/', Authorize('Administrador'), categorias.categoriaValidator, categorias.create);
+router.get('/', Authorize('Usuario,Administrador'), categoriasController.getAll);
 
-router.put('/:id', Authorize('Administrador'), categorias.categoriaValidator, categorias.update);
+router.get('/:id', Authorize('Usuario,Administrador'), idParamRules, validateRequest, categoriasController.get);
 
-router.delete('/:id', Authorize('Administrador'), categorias.delete);
+router.post('/', Authorize('Administrador'), categoriaRules, validateRequest, categoriasController.create);
+
+router.put(
+  '/:id',
+  Authorize('Administrador'),
+  idParamRules,
+  categoriaRules,
+  validateRequest,
+  categoriasController.update
+);
+
+router.delete('/:id', Authorize('Administrador'), idParamRules, validateRequest, categoriasController.delete);
 
 module.exports = router;

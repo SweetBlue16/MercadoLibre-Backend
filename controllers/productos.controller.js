@@ -137,7 +137,7 @@ const asignaCategoria = async (req, res, next) => {
 
 const eliminaCategoria = async (req, res, next) => {
   try {
-    const itemToRemove = await categoria.findByPk(req.body.categoriaid);
+    const itemToRemove = await categoria.findByPk(req.params.categoriaid);
     if (!itemToRemove) {
       return res.status(404).send();
     }
@@ -148,7 +148,7 @@ const eliminaCategoria = async (req, res, next) => {
     }
 
     await item.removeCategoria(itemToRemove);
-    req.bitacora('productocategoria.eliminar', `${req.params.id}:${req.body.categoriaid}`);
+    req.bitacora('productocategoria.eliminar', `${req.params.id}:${req.params.categoriaid}`);
     res.status(204).send();
   } catch (error) {
     next(error);
