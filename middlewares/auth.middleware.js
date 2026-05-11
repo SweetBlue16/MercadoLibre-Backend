@@ -1,5 +1,4 @@
 const jwt = require('jsonwebtoken');
-const jwtSecret = process.env.JWT_SECRET;
 const ClaimTypes = require('../config/claimtypes');
 const { GeneraToken } = require('../services/jwttoken.service');
 
@@ -7,36 +6,37 @@ const Authorize = (rol) => {
   return async (req, res, next) => {
     try {
       const authHeader = req.header('Authorization');
-      const error = new Error('Acceso denegado');
-      error.statusCode = 401;
+
       if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return next(error);
+        return res.status(401).json('Acceso denegado. Token no proporcionado o formato inválido.');
       }
 
       const token = authHeader.split(' ')[1];
-      const decodedToken = jwt.verify(token, jwtSecret);
 
-      if (rol) {
-        if (rol.split(',').indexOf(decodedToken[ClaimTypes.Role]) === -1) {
-          return next(error);
-        }
+      const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+
+      const rolesPermitidos = rol.split(',').map((r) => r.trim());
+      const userRole = decodedToken[ClaimTypes.Role];
+
+      if (!rolesPermitidos.includes(userRole)) {
+        return res.status(403).json('Acceso denegado. Permisos insuficientes para esta acción.');
+      }
+
+      const timeNow = Math.floor(Date.now() / 1000);
+      const timeLeft = decodedToken.exp - timeNow;
+
+      if (timeLeft < 300 && timeLeft > 0) {
+        const newToken = GeneraToken(decodedToken[ClaimTypes.Name], decodedToken[ClaimTypes.GivenName], userRole);
+        res.setHeader('Set-Authorization', newToken);
       }
 
       req.decodedToken = decodedToken;
-      const minutosRestantes = (decodedToken.exp - new Date().getTime() / 1000) / 60;
-
-      if (minutosRestantes < 5) {
-        const nuevoToken = GeneraToken(
-          decodedToken[ClaimTypes.Name],
-          decodedToken[ClaimTypes.GivenName],
-          decodedToken[ClaimTypes.Role]
-        );
-        res.header('Set-Authorization', nuevoToken);
-      }
       next();
-    } catch (err) {
-      err.statusCode = 401;
-      next(err);
+    } catch (error) {
+      if (error.name === 'TokenExpiredError') {
+        return res.status(401).json('El token ha expirado. Por favor, inicie sesión nuevamente.');
+      }
+      return res.status(401).json('Token inválido o corrupto.');
     }
   };
 };

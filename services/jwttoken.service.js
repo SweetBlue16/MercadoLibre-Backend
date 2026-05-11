@@ -1,39 +1,35 @@
 const jwt = require('jsonwebtoken');
-const jwtSecret = process.env.JWT_SECRET;
-const ClaimTypes = require('../config/claimTypes');
+const ClaimTypes = require('../config/claimtypes');
 
 const GeneraToken = (email, nombre, rol) => {
-  const token = jwt.sign(
-    {
-      [ClaimTypes.Name]: email,
-      [ClaimTypes.GivenName]: nombre,
-      [ClaimTypes.Role]: rol,
-      iss: 'ServidorFeiJWT',
-      aud: 'ClientesFeiJWT',
-    },
-    jwtSecret,
-    { expiresIn: '20m' }
-  );
-  return token;
+  const payload = {
+    [ClaimTypes.Name]: email,
+    [ClaimTypes.GivenName]: nombre,
+    [ClaimTypes.Role]: rol,
+    iss: 'mercadolibre-backend',
+    aud: 'mercadolibre-frontend',
+  };
+
+  return jwt.sign(payload, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN || '20m',
+  });
 };
 
 const TiempoRestanteToken = (req) => {
   try {
     const authHeader = req.header('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
+
     const token = authHeader.split(' ')[1];
-    const decodedToken = jwt.verify(token, jwtSecret);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const time = decodedToken.exp - new Date().getTime() / 1000;
-    const minutes = Math.floor(time / 60);
-    const segundos = Math.floor(time - minutes * 60);
+    const timeNow = Math.floor(Date.now() / 1000);
+    const timeLeft = decoded.exp - timeNow;
 
-    return '00:' + minutes.toString().padStart(2, '0') + ':' + segundos.toString().padStart(2, '0');
-  } catch (error) {
+    return timeLeft > 0 ? timeLeft : null;
+  } catch {
     return null;
   }
 };
 
-module.exports = {
-  GeneraToken,
-  TiempoRestanteToken,
-};
+module.exports = { GeneraToken, TiempoRestanteToken };

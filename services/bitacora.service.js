@@ -7,4 +7,14 @@ const getAll = async () => {
   });
 };
 
-module.exports = { getAll };
+const create = async (accion, elementoid, ip, usuario) => {
+  return await bitacora.create({
+    accion: accion,
+    elementoid: elementoid ? elementoid.toString() : 'N/A',
+    ip: ip,
+    usuario: usuario,
+    fecha: new Date(),
+  });
+};
+
+module.exports = { getAll, create };

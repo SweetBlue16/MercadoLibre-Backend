@@ -1,23 +1,21 @@
 const requestIp = require('request-ip');
 const ClaimTypes = require('../config/claimtypes');
-const { bitacora } = require('../models');
+const bitacoraService = require('../services/bitacora.service');
 
 const bitacoralogger = (req, res, next) => {
-  const ip = requestIp.getClientIp(req);
-  let email = 'invitado';
-
   req.bitacora = async (accion, id) => {
-    if (req.decodedToken) {
-      email = req.decodedToken[ClaimTypes.Name];
-    }
+    try {
+      const ip = requestIp.getClientIp(req) || '0.0.0.0';
+      let email = 'invitado';
 
-    await bitacora.create({
-      accion: accion,
-      elementoid: id,
-      ip: ip,
-      usuario: email,
-      fecha: new Date(),
-    });
+      if (req.decodedToken) {
+        email = req.decodedToken[ClaimTypes.Name] || 'desconocido';
+      }
+
+      await bitacoraService.create(accion, id, ip, email);
+    } catch (error) {
+      console.error(`[ALERTA DE AUDITORÍA] Fallo al escribir en bitácora: ${error.message}`);
+    }
   };
   next();
 };
