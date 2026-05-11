@@ -10,7 +10,8 @@ module.exports = (sequelize, DataTypes) => {
   usuario.init(
     {
       id: {
-        type: DataTypes.STRING,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       email: {
@@ -39,6 +40,20 @@ module.exports = (sequelize, DataTypes) => {
       sequelize,
       freezeTableName: true,
       modelName: 'usuario',
+      hooks: {
+        beforeCreate: async (user) => {
+          if (user.passwordhash) {
+            const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS, 10) || 12;
+            user.passwordhash = await bcrypt.hash(user.passwordhash, saltRounds);
+          }
+        },
+        beforeUpdate: async (user) => {
+          if (user.changed('passwordhash')) {
+            const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS, 10) || 12;
+            user.passwordhash = await bcrypt.hash(user.passwordhash, saltRounds);
+          }
+        },
+      },
     }
   );
   return usuario;

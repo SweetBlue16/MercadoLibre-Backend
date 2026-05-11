@@ -1,36 +1,13 @@
-const bcrypt = require('bcrypt');
-const { usuario, rol, Sequelize } = require('../models');
-const { GeneraToken, TiempoRestanteToken } = require('../services/jwttoken.service');
+const authService = require('../services/auth.service');
+const { TiempoRestanteToken } = require('../services/jwttoken.service');
 
 const login = async (req, res, next) => {
   const { email, password } = req.body;
 
   try {
-    const data = await usuario.findOne({
-      where: { email: email },
-      raw: true,
-      attributes: ['id', 'email', 'passwordhash', 'nombre', [Sequelize.col('rol.nombre'), 'rol']],
-      include: { model: rol, attributes: [] },
-    });
-
-    if (data === null) {
-      return res.status(401).json('Usuario o contraseña incorrectos.');
-    }
-
-    const passwordMatch = await bcrypt.compare(password, data.passwordhash);
-    if (!passwordMatch) {
-      return res.status(401).json('Usuario o contraseña incorrectos.');
-    }
-
-    const token = GeneraToken(data.email, data.nombre, data.rol);
-    req.bitacora('usuario.login', data.email);
-
-    res.status(200).json({
-      email: data.email,
-      nombre: data.nombre,
-      rol: data.rol,
-      jwt: token,
-    });
+    const authData = await authService.login(email, password);
+    req.bitacora('usuario.login', authData.email);
+    res.status(200).json(authData);
   } catch (error) {
     next(error);
   }
