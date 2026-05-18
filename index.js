@@ -5,27 +5,49 @@ const dotenv = require('dotenv');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 
-const app = express();
-
 dotenv.config();
 
-app.use(helmet());
+const app = express();
+const serverPort = process.env.SERVER_PORT || process.env.PORT || 3000;
+const jwtSecret = process.env.JWT_SECRET;
+
+if (!jwtSecret || jwtSecret.length < 32) {
+  throw new Error('JWT_SECRET debe estar definido y tener al menos 32 caracteres.');
+}
+
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    referrerPolicy: { policy: 'no-referrer' },
+  })
+);
 
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: false, limit: '10kb' }));
-
 app.use(hpp());
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
-  message: 'Demasiadas solicitudes desde esta IP, por favor intente nuevamente después de 15 minutos',
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: 'Demasiadas solicitudes desde esta IP, por favor intente nuevamente despues de 15 minutos',
 });
 app.use('/api', limiter);
 
+const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:8080')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 const corsOptions = {
-  origin: ['http://localhost:8080', 'http://localhost:8081'],
-  methods: 'GET,PUT,POST,DELETE',
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Origen no permitido por CORS.'));
+  },
+  methods: ['GET', 'PUT', 'POST', 'DELETE'],
   exposedHeaders: ['Set-Authorization'],
 };
 app.use(cors(corsOptions));
@@ -43,6 +65,9 @@ app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/bitacora', require('./routes/bitacora.routes'));
 app.use('/api/roles', require('./routes/roles.routes'));
 app.use('/api/archivos', require('./routes/archivos.routes'));
+app.use('/api/carrito', require('./routes/carrito.routes'));
+app.use('/api/pedidos', require('./routes/pedidos.routes'));
+
 app.use((req, res) => {
   // #swagger.ignore = true
   res.status(404).json({
@@ -55,6 +80,6 @@ app.use((req, res) => {
 const errorHandler = require('./middlewares/errorhandler.middleware');
 app.use(errorHandler);
 
-app.listen(process.env.SERVER_PORT, () => {
-  console.log(`Aplicación escuchando en el puerto ${process.env.SERVER_PORT}`);
+app.listen(serverPort, () => {
+  console.log(`Aplicacion escuchando en el puerto ${serverPort}`);
 });

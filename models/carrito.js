@@ -2,47 +2,47 @@
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
-  class archivo extends Model {
+  class carrito extends Model {
     static associate(models) {
-      archivo.hasMany(models.producto, {
-        foreignKey: 'archivoid',
+      carrito.belongsTo(models.usuario, {
+        foreignKey: 'usuarioid',
+      });
+      carrito.belongsTo(models.producto, {
+        foreignKey: 'productoid',
       });
     }
   }
-  archivo.init(
+
+  carrito.init(
     {
       id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true,
       },
-      mime: {
-        type: DataTypes.STRING,
+      usuarioid: {
+        type: DataTypes.UUID,
         allowNull: false,
       },
-      nombre: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      size: {
+      productoid: {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
-      indb: {
-        type: DataTypes.BOOLEAN,
+      cantidad: {
+        type: DataTypes.INTEGER,
         allowNull: false,
-        defaultValue: false,
-      },
-      datos: {
-        type: DataTypes.BLOB('long'),
-        allowNull: true,
+        defaultValue: 1,
+        validate: {
+          min: 1,
+          max: 99,
+        },
       },
     },
     {
       sequelize,
       freezeTableName: true,
-      modelName: 'archivo',
+      modelName: 'carrito',
     }
   );
-  return archivo;
+  return carrito;
 };

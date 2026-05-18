@@ -7,6 +7,12 @@ module.exports = {
   async up(queryInterface, Sequelize) {
     const AdministradorUUID = crypto.randomUUID();
     const UsuarioUUID = crypto.randomUUID();
+    const adminPassword = process.env.SEED_ADMIN_PASSWORD;
+    const userPassword = process.env.SEED_USER_PASSWORD;
+
+    if (!adminPassword || !userPassword) {
+      throw new Error('Defina SEED_ADMIN_PASSWORD y SEED_USER_PASSWORD antes de ejecutar seeders.');
+    }
 
     await queryInterface.bulkInsert('rol', [
       {
@@ -26,11 +32,8 @@ module.exports = {
     await queryInterface.bulkInsert('usuario', [
       {
         id: crypto.randomUUID(),
-        email: 'gvera@uv.mx',
-        passwordhash: await bcrypt.hash(
-          'pas9L!rX$4vM@3qTz#Np1K^dA7fW*eHyC8tito',
-          10
-        ),
+        email: process.env.SEED_ADMIN_EMAIL || 'admin@example.com',
+        passwordhash: await bcrypt.hash(adminPassword, 10),
         nombre: 'Guillermo Vera',
         rolid: AdministradorUUID,
         protegido: true,
@@ -39,8 +42,8 @@ module.exports = {
       },
       {
         id: crypto.randomUUID(),
-        email: 'patito@uv.mx',
-        passwordhash: await bcrypt.hash('Zx3&Pv$Mn7!aRbT2#LkQ@8cEy^JgWu94', 10),
+        email: process.env.SEED_USER_EMAIL || 'user@example.com',
+        passwordhash: await bcrypt.hash(userPassword, 10),
         nombre: 'Usuario patito',
         rolid: UsuarioUUID,
         createdAt: new Date(),

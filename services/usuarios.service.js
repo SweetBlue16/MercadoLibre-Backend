@@ -1,5 +1,22 @@
 const { usuario, rol, Sequelize } = require('../models');
 
+const assertStrongPassword = (email, password) => {
+  const rules = [
+    password && password.length >= 12,
+    /[A-Z]/.test(password || ''),
+    /[a-z]/.test(password || ''),
+    /\d/.test(password || ''),
+    /[^A-Za-z0-9]/.test(password || ''),
+    password !== email,
+  ];
+
+  if (rules.some((isValid) => !isValid)) {
+    const error = new Error('La contraseña no cumple la politica de seguridad.');
+    error.statusCode = 400;
+    throw error;
+  }
+};
+
 const getAll = async () => {
   return await usuario.findAll({
     raw: true,
@@ -25,6 +42,8 @@ const getByEmail = async (email) => {
 };
 
 const create = async (usuarioData) => {
+  assertStrongPassword(usuarioData.email, usuarioData.password);
+
   const rolusuario = await rol.findOne({ where: { nombre: usuarioData.rol || 'Usuario' } });
   if (!rolusuario) {
     const error = new Error('El rol especificado no existe.');
@@ -47,6 +66,31 @@ const create = async (usuarioData) => {
   };
 };
 
+const registroPublico = async (usuarioData) => {
+  assertStrongPassword(usuarioData.email, usuarioData.password);
+
+  const rolusuario = await rol.findOne({ where: { nombre: 'Usuario' } });
+  if (!rolusuario) {
+    const error = new Error('El rol de usuario no esta configurado.');
+    error.statusCode = 500;
+    throw error;
+  }
+
+  const newUser = await usuario.create({
+    email: usuarioData.email,
+    nombre: usuarioData.nombre,
+    passwordhash: usuarioData.password,
+    rolid: rolusuario.id,
+  });
+
+  return {
+    id: newUser.id,
+    email: newUser.email,
+    nombre: newUser.nombre,
+    rol: rolusuario.nombre,
+  };
+};
+
 const update = async (email, updateData) => {
   if (updateData.rol) {
     const rolusuario = await rol.findOne({ where: { nombre: updateData.rol } });
@@ -59,6 +103,7 @@ const update = async (email, updateData) => {
   }
 
   if (updateData.password) {
+    assertStrongPassword(email, updateData.password);
     updateData.passwordhash = updateData.password;
   }
 
@@ -91,4 +136,4 @@ const eliminar = async (email) => {
   return true;
 };
 
-module.exports = { getAll, getByEmail, create, update, eliminar };
+module.exports = { getAll, getByEmail, create, registroPublico, update, eliminar };

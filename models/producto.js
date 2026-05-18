@@ -10,6 +10,12 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'productoid',
       });
       producto.belongsTo(models.archivo);
+      producto.hasMany(models.carrito, {
+        foreignKey: 'productoid',
+      });
+      producto.hasMany(models.detallepedido, {
+        foreignKey: 'productoid',
+      });
     }
   }
   producto.init(

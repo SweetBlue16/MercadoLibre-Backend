@@ -6,12 +6,13 @@ const GeneraToken = (email, nombre, rol) => {
     [ClaimTypes.Name]: email,
     [ClaimTypes.GivenName]: nombre,
     [ClaimTypes.Role]: rol,
-    iss: 'mercadolibre-backend',
-    aud: 'mercadolibre-frontend',
   };
 
   return jwt.sign(payload, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || '20m',
+    algorithm: 'HS256',
+    issuer: 'mercadolibre-backend',
+    audience: 'mercadolibre-frontend',
   });
 };
 
@@ -21,7 +22,11 @@ const TiempoRestanteToken = (req) => {
     if (!authHeader?.startsWith('Bearer ')) return null;
 
     const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, {
+      algorithms: ['HS256'],
+      issuer: 'mercadolibre-backend',
+      audience: 'mercadolibre-frontend',
+    });
 
     const timeNow = Math.floor(Date.now() / 1000);
     const timeLeft = decoded.exp - timeNow;

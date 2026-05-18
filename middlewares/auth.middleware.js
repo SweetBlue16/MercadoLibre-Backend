@@ -13,7 +13,11 @@ const Authorize = (rol) => {
 
       const token = authHeader.split(' ')[1];
 
-      const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+      const decodedToken = jwt.verify(token, process.env.JWT_SECRET, {
+        algorithms: ['HS256'],
+        issuer: 'mercadolibre-backend',
+        audience: 'mercadolibre-frontend',
+      });
 
       const rolesPermitidos = rol.split(',').map((r) => r.trim());
       const userRole = decodedToken[ClaimTypes.Role];

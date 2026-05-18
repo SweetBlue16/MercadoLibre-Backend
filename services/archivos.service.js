@@ -3,7 +3,44 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const getUploadsPath = (filename) => {
-  return path.join(__dirname, '..', 'uploads', filename);
+  const safeName = path.basename(filename);
+  const uploadsDir = path.join(__dirname, '..', 'uploads');
+  const fullPath = path.join(uploadsDir, safeName);
+
+  if (!fullPath.startsWith(uploadsDir)) {
+    const error = new Error('Ruta de archivo invalida');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return fullPath;
+};
+
+const validarFirmaImagen = (filePath, mime) => {
+  const buffer = fs.readFileSync(filePath);
+  const isJpeg = buffer.length > 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+  const isPng =
+    buffer.length > 8 &&
+    buffer[0] === 0x89 &&
+    buffer[1] === 0x50 &&
+    buffer[2] === 0x4e &&
+    buffer[3] === 0x47 &&
+    buffer[4] === 0x0d &&
+    buffer[5] === 0x0a &&
+    buffer[6] === 0x1a &&
+    buffer[7] === 0x0a;
+  const isWebp =
+    buffer.length > 12 && buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP';
+
+  const valid =
+    (mime === 'image/jpeg' && isJpeg) || (mime === 'image/png' && isPng) || (mime === 'image/webp' && isWebp);
+
+  if (!valid) {
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    const error = new Error('El contenido del archivo no coincide con una imagen permitida.');
+    error.statusCode = 400;
+    throw error;
+  }
 };
 
 const getAll = async () => {
@@ -52,6 +89,7 @@ const create = async (fileData) => {
   let binario = null;
   let indb = false;
   const filePath = getUploadsPath(fileData.filename);
+  validarFirmaImagen(filePath, fileData.mimetype);
 
   if (process.env.FILES_IN_DB === 'true') {
     binario = fs.readFileSync(filePath);
@@ -78,6 +116,7 @@ const create = async (fileData) => {
 const update = async (id, fileData) => {
   const imagen = await archivo.findByPk(id);
   const newFilePath = getUploadsPath(fileData.filename);
+  validarFirmaImagen(newFilePath, fileData.mimetype);
 
   if (!imagen) {
     if (fs.existsSync(newFilePath)) fs.unlinkSync(newFilePath);

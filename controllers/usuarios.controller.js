@@ -28,6 +28,16 @@ const create = async (req, res, next) => {
   }
 };
 
+const registroPublico = async (req, res, next) => {
+  try {
+    const data = await usuariosService.registroPublico(req.body);
+    req.bitacora('usuarios.registro', data.email);
+    res.status(201).json(data);
+  } catch (error) {
+    next(error);
+  }
+};
+
 const update = async (req, res, next) => {
   try {
     await usuariosService.update(req.params.email, req.body);
@@ -52,6 +62,7 @@ module.exports = {
   getAll,
   get,
   create,
+  registroPublico,
   update,
   delete: eliminar,
 };

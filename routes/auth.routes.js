@@ -3,6 +3,16 @@ const authController = require('../controllers/auth.controller');
 const validateRequest = require('../middlewares/validator.middleware');
 const { body } = require('express-validator');
 const Authorize = require('../middlewares/auth.middleware');
+const rateLimit = require('express-rate-limit');
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 8,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => `${req.ip}:${String(req.body?.email || '').toLowerCase()}`,
+  message: 'Demasiados intentos de inicio de sesion. Intente nuevamente mas tarde.',
+});
 
 const loginRules = [
   body('email')
@@ -22,7 +32,7 @@ const loginRules = [
     .trim(),
 ];
 
-router.post('/', loginRules, validateRequest, (req, res, next) => {
+router.post('/', loginLimiter, loginRules, validateRequest, (req, res, next) => {
   // #swagger.tags = ['Autenticación']
   // #swagger.summary = 'Iniciar sesión y obtener JWT'
   // #swagger.description = 'Genera un JWT seguro firmado con HS256. Las entradas están fuertemente validadas para evitar inyección SQL (CWE-89) y desbordamientos.'

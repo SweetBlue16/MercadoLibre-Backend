@@ -12,7 +12,14 @@ const productoRules = [
     .withMessage('El precio es obligatorio')
     .isDecimal()
     .withMessage('El precio debe ser un número decimal'),
-  body('archivoid').optional({ nullable: true }).isUUID().withMessage('El archivoid debe ser un UUID válido'),
+  body('archivoid')
+    .optional({ nullable: true })
+    .isInt({ min: 1 })
+    .withMessage('El archivoid debe ser un entero positivo'),
+  body('archivoId')
+    .optional({ nullable: true })
+    .isInt({ min: 1 })
+    .withMessage('El archivoId debe ser un entero positivo'),
 ];
 
 const idParamRules = [param('id').notEmpty().withMessage('El ID es obligatorio')];
@@ -29,7 +36,7 @@ router.get('/', Authorize('Usuario,Administrador'), (req, res, next) => {
   /* #swagger.security = [{ "bearerAuth": [] }] */
   /* #swagger.parameters['s'] = {
         in: 'query',
-        description: 'Término de búsqueda opcional (Ej: "Laptop")',
+        description: 'Termino de busqueda opcional',
         type: 'string'
   } */
   /* #swagger.responses[200] = { description: 'Catálogo recuperado exitosamente.' } */
@@ -46,7 +53,7 @@ router.get('/:id', Authorize('Usuario,Administrador'), idParamRules, validateReq
 router.post('/', Authorize('Administrador'), productoRules, validateRequest, (req, res, next) => {
   // #swagger.tags = ['Productos']
   // #swagger.summary = 'Crear un nuevo producto'
-  // #swagger.description = 'Los campos de texto son sanitizados contra XSS (CWE-79). El archivoid debe ser un UUID válido o nulo para mantener la integridad relacional.'
+  // #swagger.description = 'Los campos de texto son sanitizados contra XSS (CWE-79). El archivoid debe ser un entero positivo o nulo para mantener la integridad relacional.'
   /* #swagger.security = [{ "bearerAuth": [] }] */
   /* #swagger.parameters['body'] = {
         in: 'body',
@@ -54,7 +61,7 @@ router.post('/', Authorize('Administrador'), productoRules, validateRequest, (re
             titulo: "Teclado Mecánico",
             descripcion: "Teclado RGB switch rojo",
             precio: 1200.50,
-            archivoid: "123e4567-e89b-12d3-a456-426614174000"
+            archivoid: 1
         }
   } */
   productosController.create(req, res, next);

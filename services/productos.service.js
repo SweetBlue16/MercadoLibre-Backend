@@ -1,4 +1,4 @@
-const { producto, categoria, Sequelize } = require('../models');
+const { producto, categoria, archivo, Sequelize } = require('../models');
 const Op = Sequelize.Op;
 
 const getAll = async (searchTerm) => {
@@ -42,15 +42,48 @@ const getById = async (id) => {
 };
 
 const create = async (productoData) => {
+  const archivoid = productoData.archivoid || productoData.archivoId || null;
+
+  if (archivoid) {
+    const portada = await archivo.findByPk(archivoid);
+    if (!portada) {
+      const error = new Error('Archivo de portada no encontrado.');
+      error.statusCode = 400;
+      throw error;
+    }
+  }
+
   return await producto.create({
     titulo: productoData.titulo,
     descripcion: productoData.descripcion,
     precio: productoData.precio,
-    archivoid: productoData.archivoid || null,
+    archivoid,
   });
 };
 
 const update = async (id, updateData) => {
+  if (updateData.archivoId !== undefined) {
+    updateData.archivoid = updateData.archivoId;
+    delete updateData.archivoId;
+  }
+
+  if (updateData.productoId !== undefined) {
+    delete updateData.productoId;
+  }
+
+  if (updateData.categorias !== undefined) {
+    delete updateData.categorias;
+  }
+
+  if (updateData.archivoid) {
+    const portada = await archivo.findByPk(updateData.archivoid);
+    if (!portada) {
+      const error = new Error('Archivo de portada no encontrado.');
+      error.statusCode = 400;
+      throw error;
+    }
+  }
+
   const data = await producto.update(updateData, { where: { id: id } });
 
   if (data[0] === 0) {

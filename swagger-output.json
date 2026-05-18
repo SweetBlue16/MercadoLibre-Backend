@@ -35,6 +35,14 @@
     {
       "name": "Bitácora",
       "description": "Consulta de logs de auditoría (Solo Administradores)."
+    },
+    {
+      "name": "Carrito",
+      "description": "Gestion del carrito del usuario autenticado."
+    },
+    {
+      "name": "Pedidos",
+      "description": "Proceso de compra y pedidos recibidos."
     }
   ],
   "schemes": [
@@ -253,13 +261,14 @@
         "description": "Obtiene la lista de productos y sus categorías vinculadas. Soporta búsqueda por coincidencia parcial en el título.",
         "parameters": [
           {
-            "name": "s",
-            "in": "query",
+            "name": "Authorization",
+            "in": "header",
             "type": "string"
           },
           {
-            "name": "Authorization",
-            "in": "header",
+            "name": "s",
+            "in": "query",
+            "description": "Termino de busqueda opcional",
             "type": "string"
           }
         ],
@@ -285,7 +294,7 @@
           "Productos"
         ],
         "summary": "Crear un nuevo producto",
-        "description": "Los campos de texto son sanitizados contra XSS (CWE-79). El archivoid debe ser un UUID válido o nulo para mantener la integridad relacional.",
+        "description": "Los campos de texto son sanitizados contra XSS (CWE-79). El archivoid debe ser un entero positivo o nulo para mantener la integridad relacional.",
         "parameters": [
           {
             "name": "Authorization",
@@ -311,8 +320,8 @@
                   "example": 1200.5
                 },
                 "archivoid": {
-                  "type": "string",
-                  "example": "123e4567-e89b-12d3-a456-426614174000"
+                  "type": "number",
+                  "example": 1
                 }
               }
             }
@@ -538,6 +547,20 @@
         ]
       }
     },
+    "/api/usuarios/registro": {
+      "post": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "Registro publico de usuario comprador",
+        "description": "",
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        }
+      }
+    },
     "/api/usuarios/": {
       "get": {
         "tags": [
@@ -574,37 +597,12 @@
           "Usuarios"
         ],
         "summary": "Crear un nuevo usuario",
-        "description": "Registra un usuario en la BD. El ID (UUIDv4) es generado automáticamente por la capa de datos. La contraseña es procesada mediante hooks (bcrypt) antes de persistirse, mitigando la exposición de credenciales.",
+        "description": "Registra un usuario en la BD. La contraseña se hashea con bcrypt antes de persistirse.",
         "parameters": [
           {
             "name": "Authorization",
             "in": "header",
             "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "nombre": {
-                  "type": "string",
-                  "example": "Juan Pérez"
-                },
-                "email": {
-                  "type": "string",
-                  "example": "juan@ejemplo.com"
-                },
-                "password": {
-                  "type": "string",
-                  "example": "PasswordSegura123!"
-                },
-                "rol": {
-                  "type": "string",
-                  "example": "Administrador"
-                }
-              }
-            }
           }
         ],
         "responses": {
@@ -703,7 +701,7 @@
           "Usuarios"
         ],
         "summary": "Eliminar usuario",
-        "description": "Regla de negocio: Fallará con un error 403 si se intenta eliminar un usuario con el flag \"protegido\" (ej: SuperAdministrador principal).",
+        "description": "",
         "parameters": [
           {
             "name": "email",
@@ -1061,6 +1059,333 @@
           "Archivos"
         ],
         "summary": "Obtener metadatos de un archivo (Solo Admin)",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/carrito/": {
+      "get": {
+        "tags": [
+          "Carrito"
+        ],
+        "summary": "Consultar carrito del usuario autenticado",
+        "description": "",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Carrito"
+        ],
+        "summary": "Agregar producto al carrito",
+        "description": "",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "productoid": {
+                  "example": "any"
+                },
+                "cantidad": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Carrito"
+        ],
+        "summary": "Vaciar carrito",
+        "description": "",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/carrito/{productoid}": {
+      "put": {
+        "tags": [
+          "Carrito"
+        ],
+        "summary": "Actualizar cantidad de un producto del carrito",
+        "description": "",
+        "parameters": [
+          {
+            "name": "productoid",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "cantidad": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Carrito"
+        ],
+        "summary": "Eliminar producto del carrito",
+        "description": "",
+        "parameters": [
+          {
+            "name": "productoid",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/pedidos/confirmar": {
+      "post": {
+        "tags": [
+          "Pedidos"
+        ],
+        "summary": "Confirmar compra del carrito",
+        "description": "",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/pedidos/mios": {
+      "get": {
+        "tags": [
+          "Pedidos"
+        ],
+        "summary": "Listar pedidos del usuario autenticado",
+        "description": "",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/pedidos/": {
+      "get": {
+        "tags": [
+          "Pedidos"
+        ],
+        "summary": "Listar pedidos recibidos",
+        "description": "",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/pedidos/{id}": {
+      "get": {
+        "tags": [
+          "Pedidos"
+        ],
+        "summary": "Detalle de pedido",
         "description": "",
         "parameters": [
           {

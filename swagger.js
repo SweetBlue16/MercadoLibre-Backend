@@ -31,6 +31,8 @@ const doc = {
     { name: 'Categorías', description: 'Administración de categorías del sistema.' },
     { name: 'Archivos', description: 'Subida y visualización segura de imágenes binarias.' },
     { name: 'Bitácora', description: 'Consulta de logs de auditoría (Solo Administradores).' },
+    { name: 'Carrito', description: 'Gestion del carrito del usuario autenticado.' },
+    { name: 'Pedidos', description: 'Proceso de compra y pedidos recibidos.' },
   ],
   definitions: {
     ErrorResponse: {

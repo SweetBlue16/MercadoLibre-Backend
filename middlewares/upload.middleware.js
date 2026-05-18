@@ -1,10 +1,14 @@
 const multer = require('multer');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const fs = require('node:fs');
+
+const uploadsDir = path.join(__dirname, '..', 'uploads');
+fs.mkdirSync(uploadsDir, { recursive: true });
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/');
+    cb(null, uploadsDir);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = crypto.randomUUID();

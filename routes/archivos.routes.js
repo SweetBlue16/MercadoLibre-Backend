@@ -5,9 +5,7 @@ const upload = require('../middlewares/upload.middleware');
 const validateRequest = require('../middlewares/validator.middleware');
 const { param } = require('express-validator');
 
-const idParamRules = [
-  param('id').notEmpty().withMessage('El ID del archivo es obligatorio').isString().trim().escape(),
-];
+const idParamRules = [param('id').isInt({ min: 1 }).withMessage('El ID del archivo debe ser un entero positivo')];
 
 router.get('/', Authorize('Administrador'), (req, res, next) => {
   // #swagger.tags = ['Archivos']
@@ -36,7 +34,7 @@ router.get('/:id/detalle', Authorize('Administrador'), (req, res, next) => {
   archivosController.getDetalle(req, res, next);
 });
 
-router.post('/', upload.single('file'), Authorize('Administrador'), (req, res, next) => {
+router.post('/', Authorize('Administrador'), upload.single('file'), (req, res, next) => {
   // #swagger.tags = ['Archivos']
   // #swagger.summary = 'Subir un nuevo archivo de imagen'
   // #swagger.description = 'Endpoint blindado contra CWE-434 (Subida de archivos peligrosos). Valida estrictamente extensiones y MIME Types permitiendo solo imágenes. Renombra automáticamente el archivo con UUIDv4.'
@@ -55,8 +53,8 @@ router.post('/', upload.single('file'), Authorize('Administrador'), (req, res, n
 
 router.put(
   '/:id',
-  upload.single('file'),
   Authorize('Administrador'),
+  upload.single('file'),
   idParamRules,
   validateRequest,
   (req, res, next) => {

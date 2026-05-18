@@ -6,6 +6,12 @@ module.exports = (sequelize, DataTypes) => {
   class usuario extends Model {
     static associate(models) {
       usuario.belongsTo(models.rol);
+      usuario.hasMany(models.carrito, {
+        foreignKey: 'usuarioid',
+      });
+      usuario.hasMany(models.pedido, {
+        foreignKey: 'usuarioid',
+      });
     }
   }
   usuario.init(
