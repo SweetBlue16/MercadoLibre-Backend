@@ -1,4 +1,6 @@
 const archivosService = require('../services/archivos.service');
+const ErrorCodes = require('../messages/error-codes');
+const { createError } = require('../utils/app-error');
 
 const getAll = async (req, res, next) => {
   try {
@@ -30,7 +32,7 @@ const get = async (req, res, next) => {
 const create = async (req, res, next) => {
   try {
     if (!req.file) {
-      return res.status(400).json('El archivo es obligatorio.');
+      return next(createError(ErrorCodes.FILE_UPLOAD_FAILED, 400));
     }
     const data = await archivosService.create(req.file);
     req.bitacora('archivos.crear', data.id);
@@ -43,7 +45,7 @@ const create = async (req, res, next) => {
 const update = async (req, res, next) => {
   try {
     if (!req.file) {
-      return res.status(400).json('El archivo es obligatorio.');
+      return next(createError(ErrorCodes.FILE_UPLOAD_FAILED, 400));
     }
     await archivosService.update(req.params.id, req.file);
     req.bitacora('archivos.editar', req.params.id);

@@ -17,6 +17,40 @@ test('registro publico no permite asignar rol', () => {
   assert.match(routes, /registroRules[\s\S]*body\('rol'\)\.not\(\)\.exists/);
 });
 
+test('registro publico valida correo duplicado con mensaje controlado', () => {
+  const service = read('services/usuarios.service.js');
+  assert.match(service, /El correo electrónico ya está registrado/);
+  assert.match(service, /statusCode = 409/);
+});
+
+test('flujos de password y correo usan tokens hasheados', () => {
+  const account = read('services/account.service.js');
+  assert.match(account, /hashToken\(code\)/);
+  assert.match(account, /hashToken\(token\)/);
+  assert.doesNotMatch(account, /codigoconfirmacionhash:\s*code/);
+  assert.doesNotMatch(account, /resettokenhash:\s*code/);
+});
+
+test('pedido tiene estados permitidos y endpoint admin para actualizar', () => {
+  const constants = read('config/constants.js');
+  const routes = read('routes/pedidos.routes.js');
+  assert.match(constants, /Recibido/);
+  assert.match(constants, /En ruta de entrega/);
+  assert.match(routes, /Authorize\('Administrador'\)/);
+  assert.match(routes, /\/:id\/estado/);
+});
+
+test('servicio de pedidos valida ownership para mis pedidos', () => {
+  const service = read('services/pedidos.service.js');
+  assert.match(service, /getByIdParaUsuario/);
+  assert.match(service, /where: \{ id, usuarioid: user\.id \}/);
+});
+
+test('recuperacion de password devuelve mensaje generico', () => {
+  const controller = read('controllers/auth.controller.js');
+  assert.match(controller, /Si el correo está registrado, recibirás instrucciones/);
+});
+
 test('uploads ignora archivos de usuario y conserva .gitkeep', () => {
   const gitignore = read('.gitignore');
   assert.match(gitignore, /uploads\/\*/);
@@ -28,4 +62,20 @@ test('env example no contiene secretos reales del entorno local', () => {
   assert.match(envExample, /change_this_local_password/);
   assert.match(envExample, /replace_with_strong_admin_password/);
   assert.match(envExample, /replace_with_strong_user_password/);
+  assert.match(envExample, /SMTP_PASSWORD=\s*(\r?\n|$)/);
+  assert.match(envExample, /EMAIL_DEV_MODE=true/);
+});
+
+test('api usa errores estructurados y codigos centrales', () => {
+  const errorHandler = read('middlewares/errorhandler.middleware.js');
+  const codes = read('messages/error-codes.js');
+  assert.match(errorHandler, /success: false/);
+  assert.match(errorHandler, /correlationId/);
+  assert.match(codes, /AUTH_INVALID_CREDENTIALS/);
+  assert.match(codes, /EMAIL_SEND_FAILED/);
+});
+
+test('helmet permite imagenes cross origin desde el frontend', () => {
+  const index = read('index.js');
+  assert.match(index, /crossOriginResourcePolicy:\s*\{\s*policy:\s*'cross-origin'\s*\}/);
 });

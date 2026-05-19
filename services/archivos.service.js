@@ -1,16 +1,18 @@
 const { archivo } = require('../models');
 const fs = require('node:fs');
 const path = require('node:path');
+const ErrorCodes = require('../messages/error-codes');
+const { createError } = require('../utils/app-error');
+
+const uploadsDir = path.resolve(__dirname, '..', 'uploads');
 
 const getUploadsPath = (filename) => {
-  const safeName = path.basename(filename);
-  const uploadsDir = path.join(__dirname, '..', 'uploads');
-  const fullPath = path.join(uploadsDir, safeName);
+  const safeName = path.basename(filename || '');
+  const fullPath = path.resolve(uploadsDir, safeName);
+  const relative = path.relative(uploadsDir, fullPath);
 
-  if (!fullPath.startsWith(uploadsDir)) {
-    const error = new Error('Ruta de archivo invalida');
-    error.statusCode = 400;
-    throw error;
+  if (!safeName || relative.startsWith('..') || path.isAbsolute(relative)) {
+    throw createError(ErrorCodes.FILE_NOT_FOUND, 404);
   }
 
   return fullPath;
@@ -37,9 +39,7 @@ const validarFirmaImagen = (filePath, mime) => {
 
   if (!valid) {
     if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-    const error = new Error('El contenido del archivo no coincide con una imagen permitida.');
-    error.statusCode = 400;
-    throw error;
+    throw createError(ErrorCodes.FILE_INVALID_TYPE, 400);
   }
 };
 
@@ -55,9 +55,7 @@ const getDetalle = async (id) => {
   });
 
   if (!data) {
-    const error = new Error('Archivo no encontrado');
-    error.statusCode = 404;
-    throw error;
+    throw createError(ErrorCodes.FILE_NOT_FOUND, 404);
   }
   return data;
 };
@@ -66,23 +64,24 @@ const getContenido = async (id) => {
   const data = await archivo.findByPk(id);
 
   if (!data) {
-    const error = new Error('Archivo no encontrado');
-    error.statusCode = 404;
-    throw error;
+    throw createError(ErrorCodes.FILE_NOT_FOUND, 404);
   }
 
   let imagen = data.datos;
   if (!data.indb) {
     const filePath = getUploadsPath(data.nombre);
     if (!fs.existsSync(filePath)) {
-      const error = new Error('El archivo físico ya no existe en el servidor');
-      error.statusCode = 404;
-      throw error;
+      console.warn(`[ARCHIVO_NO_DISPONIBLE] id=${id} nombre=${path.basename(data.nombre)}`);
+      throw createError(ErrorCodes.IMAGE_NOT_AVAILABLE, 404);
     }
     imagen = fs.readFileSync(filePath);
   }
 
-  return { imagen, mime: data.mime };
+  if (!imagen) {
+    throw createError(ErrorCodes.IMAGE_NOT_AVAILABLE, 404);
+  }
+
+  return { imagen, mime: data.mime || 'application/octet-stream' };
 };
 
 const create = async (fileData) => {
@@ -120,9 +119,7 @@ const update = async (id, fileData) => {
 
   if (!imagen) {
     if (fs.existsSync(newFilePath)) fs.unlinkSync(newFilePath);
-    const error = new Error('Registro de archivo no encontrado');
-    error.statusCode = 404;
-    throw error;
+    throw createError(ErrorCodes.FILE_NOT_FOUND, 404);
   }
 
   let binario = null;
@@ -133,6 +130,9 @@ const update = async (id, fileData) => {
     indb = true;
   }
 
+  const oldName = imagen.nombre;
+  const oldInDb = imagen.indb;
+
   await imagen.update({
     mime: fileData.mimetype,
     indb: indb,
@@ -141,8 +141,8 @@ const update = async (id, fileData) => {
     datos: binario,
   });
 
-  if (!imagen.indb) {
-    const oldFilePath = getUploadsPath(imagen.nombre);
+  if (!oldInDb) {
+    const oldFilePath = getUploadsPath(oldName);
     if (fs.existsSync(oldFilePath)) fs.unlinkSync(oldFilePath);
   }
 
@@ -152,9 +152,7 @@ const update = async (id, fileData) => {
 const eliminar = async (id) => {
   const imagen = await archivo.findByPk(id);
   if (!imagen) {
-    const error = new Error('Archivo no encontrado');
-    error.statusCode = 404;
-    throw error;
+    throw createError(ErrorCodes.FILE_NOT_FOUND, 404);
   }
 
   await imagen.destroy();

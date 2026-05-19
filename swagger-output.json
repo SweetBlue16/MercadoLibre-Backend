@@ -73,6 +73,11 @@
         "description": "",
         "parameters": [
           {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
             "name": "Authorization",
             "in": "header",
             "type": "string"
@@ -81,12 +86,6 @@
         "responses": {
           "200": {
             "description": "OK"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
           }
         },
         "security": [
@@ -102,6 +101,11 @@
         "summary": "Crear nueva categoría",
         "description": "La entrada se sanitiza (escape) para prevenir ataques Cross-Site Scripting (CWE-79).",
         "parameters": [
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
           {
             "name": "Authorization",
             "in": "header",
@@ -124,12 +128,6 @@
         "responses": {
           "201": {
             "description": "Categoría creada con éxito."
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
           }
         },
         "security": [
@@ -154,6 +152,11 @@
             "type": "string"
           },
           {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
             "name": "Authorization",
             "in": "header",
             "type": "string"
@@ -162,12 +165,6 @@
         "responses": {
           "200": {
             "description": "OK"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
           }
         },
         "security": [
@@ -190,6 +187,11 @@
             "type": "string"
           },
           {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
             "name": "Authorization",
             "in": "header",
             "type": "string"
@@ -198,12 +200,6 @@
         "responses": {
           "204": {
             "description": "No Content"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
           }
         },
         "security": [
@@ -226,6 +222,11 @@
             "type": "string"
           },
           {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
             "name": "Authorization",
             "in": "header",
             "type": "string"
@@ -237,12 +238,6 @@
           },
           "400": {
             "description": "La categoría está protegida por el sistema y no puede ser borrada."
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
           }
         },
         "security": [
@@ -261,6 +256,11 @@
         "description": "Obtiene la lista de productos y sus categorías vinculadas. Soporta búsqueda por coincidencia parcial en el título.",
         "parameters": [
           {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
             "name": "Authorization",
             "in": "header",
             "type": "string"
@@ -275,12 +275,6 @@
         "responses": {
           "200": {
             "description": "Catálogo recuperado exitosamente."
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
           }
         },
         "security": [
@@ -296,6 +290,11 @@
         "summary": "Crear un nuevo producto",
         "description": "Los campos de texto son sanitizados contra XSS (CWE-79). El archivoid debe ser un entero positivo o nulo para mantener la integridad relacional.",
         "parameters": [
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
           {
             "name": "Authorization",
             "in": "header",
@@ -330,12 +329,6 @@
         "responses": {
           "201": {
             "description": "Created"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
           }
         },
         "security": [
@@ -360,6 +353,11 @@
             "type": "string"
           },
           {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
             "name": "Authorization",
             "in": "header",
             "type": "string"
@@ -368,12 +366,6 @@
         "responses": {
           "200": {
             "description": "OK"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
           }
         },
         "security": [
@@ -396,6 +388,11 @@
             "type": "string"
           },
           {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
             "name": "Authorization",
             "in": "header",
             "type": "string"
@@ -404,12 +401,6 @@
         "responses": {
           "204": {
             "description": "No Content"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
           }
         },
         "security": [
@@ -432,17 +423,19 @@
             "type": "string"
           },
           {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
             "name": "Authorization",
             "in": "header",
             "type": "string"
           }
         ],
         "responses": {
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
+          "default": {
+            "description": ""
           }
         },
         "security": [
@@ -467,6 +460,11 @@
             "type": "string"
           },
           {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
             "name": "Authorization",
             "in": "header",
             "type": "string"
@@ -488,12 +486,6 @@
         "responses": {
           "204": {
             "description": "No Content"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
           }
         },
         "security": [
@@ -524,6 +516,11 @@
             "type": "string"
           },
           {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
             "name": "Authorization",
             "in": "header",
             "type": "string"
@@ -532,12 +529,6 @@
         "responses": {
           "204": {
             "description": "No Content"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
           }
         },
         "security": [
@@ -554,6 +545,13 @@
         ],
         "summary": "Registro publico de usuario comprador",
         "description": "",
+        "parameters": [
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          }
+        ],
         "responses": {
           "201": {
             "description": "Created"
@@ -570,6 +568,11 @@
         "description": "",
         "parameters": [
           {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
             "name": "Authorization",
             "in": "header",
             "type": "string"
@@ -578,12 +581,6 @@
         "responses": {
           "200": {
             "description": "OK"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
           }
         },
         "security": [
@@ -600,6 +597,11 @@
         "description": "Registra un usuario en la BD. La contraseña se hashea con bcrypt antes de persistirse.",
         "parameters": [
           {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
             "name": "Authorization",
             "in": "header",
             "type": "string"
@@ -608,12 +610,6 @@
         "responses": {
           "201": {
             "description": "Created"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
           }
         },
         "security": [
@@ -638,6 +634,11 @@
             "type": "string"
           },
           {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
             "name": "Authorization",
             "in": "header",
             "type": "string"
@@ -646,12 +647,6 @@
         "responses": {
           "200": {
             "description": "OK"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
           }
         },
         "security": [
@@ -674,6 +669,11 @@
             "type": "string"
           },
           {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
             "name": "Authorization",
             "in": "header",
             "type": "string"
@@ -682,12 +682,6 @@
         "responses": {
           "204": {
             "description": "No Content"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
           }
         },
         "security": [
@@ -710,17 +704,19 @@
             "type": "string"
           },
           {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
             "name": "Authorization",
             "in": "header",
             "type": "string"
           }
         ],
         "responses": {
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
+          "default": {
+            "description": ""
           }
         },
         "security": [
@@ -738,6 +734,11 @@
         "summary": "Iniciar sesión y obtener JWT",
         "description": "Genera un JWT seguro firmado con HS256. Las entradas están fuertemente validadas para evitar inyección SQL (CWE-89) y desbordamientos.",
         "parameters": [
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
           {
             "name": "body",
             "in": "body",
@@ -779,6 +780,11 @@
         "description": "",
         "parameters": [
           {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
             "name": "Authorization",
             "in": "header",
             "type": "string"
@@ -788,14 +794,266 @@
           "200": {
             "description": "OK"
           },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
           "404": {
             "description": "Not Found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": [
+          "Autenticacion"
+        ],
+        "summary": "Registrar cierre de sesion",
+        "description": "",
+        "parameters": [
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/auth/confirmar-correo": {
+      "post": {
+        "tags": [
+          "Autenticacion"
+        ],
+        "summary": "Confirmar correo electronico",
+        "description": "",
+        "parameters": [
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "example": "any"
+                },
+                "codigo": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/reenviar-confirmacion": {
+      "post": {
+        "tags": [
+          "Autenticacion"
+        ],
+        "summary": "Reenviar codigo de confirmacion",
+        "description": "",
+        "parameters": [
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/olvide-password": {
+      "post": {
+        "tags": [
+          "Autenticacion"
+        ],
+        "summary": "Solicitar recuperacion de password",
+        "description": "",
+        "parameters": [
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/restablecer-password": {
+      "post": {
+        "tags": [
+          "Autenticacion"
+        ],
+        "summary": "Restablecer password",
+        "description": "",
+        "parameters": [
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "example": "any"
+                },
+                "token": {
+                  "example": "any"
+                },
+                "password": {
+                  "example": "any"
+                },
+                "confirmPassword": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/cambiar-password/enviar-codigo": {
+      "post": {
+        "tags": [
+          "Autenticacion"
+        ],
+        "summary": "Enviar codigo para cambio de password del usuario autenticado",
+        "description": "",
+        "parameters": [
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/auth/cambiar-password": {
+      "post": {
+        "tags": [
+          "Autenticacion"
+        ],
+        "summary": "Cambiar password del usuario autenticado",
+        "description": "",
+        "parameters": [
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "codigo": {
+                  "example": "any"
+                },
+                "passwordActual": {
+                  "example": "any"
+                },
+                "passwordNueva": {
+                  "example": "any"
+                },
+                "confirmPassword": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
           }
         },
         "security": [
@@ -814,6 +1072,11 @@
         "description": "Devuelve el registro histórico de acciones críticas (CRUD y accesos) de la plataforma. Este endpoint está fuertemente restringido.",
         "parameters": [
           {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
             "name": "Authorization",
             "in": "header",
             "type": "string"
@@ -822,9 +1085,6 @@
         "responses": {
           "200": {
             "description": "Log de auditoría devuelto exitosamente."
-          },
-          "401": {
-            "description": "Unauthorized"
           },
           "403": {
             "description": "Acceso denegado."
@@ -846,6 +1106,11 @@
         "description": "Devuelve la lista de roles estáticos disponibles para asignación (ej: Usuario, Administrador).",
         "parameters": [
           {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
             "name": "Authorization",
             "in": "header",
             "type": "string"
@@ -854,12 +1119,6 @@
         "responses": {
           "200": {
             "description": "OK"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
           }
         },
         "security": [
@@ -877,6 +1136,11 @@
         "summary": "Listar todos los archivos (Solo Admin)",
         "description": "Obtiene los metadatos de todos los archivos almacenados en el sistema.",
         "parameters": [
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
           {
             "name": "Authorization",
             "in": "header",
@@ -911,6 +1175,11 @@
         ],
         "parameters": [
           {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
             "name": "Authorization",
             "in": "header",
             "type": "string"
@@ -929,12 +1198,6 @@
           },
           "400": {
             "description": "Tipo de archivo no permitido o límite de tamaño excedido."
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
           }
         },
         "security": [
@@ -956,6 +1219,11 @@
             "name": "id",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
             "type": "string"
           }
         ],
@@ -985,6 +1253,11 @@
             "type": "string"
           },
           {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
             "name": "Authorization",
             "in": "header",
             "type": "string"
@@ -999,15 +1272,6 @@
         "responses": {
           "204": {
             "description": "No Content"
-          },
-          "400": {
-            "description": "Bad Request"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
           }
         },
         "security": [
@@ -1030,6 +1294,11 @@
             "type": "string"
           },
           {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
             "name": "Authorization",
             "in": "header",
             "type": "string"
@@ -1038,12 +1307,6 @@
         "responses": {
           "204": {
             "description": "Archivo eliminado correctamente."
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
           }
         },
         "security": [
@@ -1068,6 +1331,11 @@
             "type": "string"
           },
           {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
             "name": "Authorization",
             "in": "header",
             "type": "string"
@@ -1076,12 +1344,6 @@
         "responses": {
           "200": {
             "description": "OK"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
           }
         },
         "security": [
@@ -1100,6 +1362,11 @@
         "description": "",
         "parameters": [
           {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
             "name": "Authorization",
             "in": "header",
             "type": "string"
@@ -1108,12 +1375,6 @@
         "responses": {
           "200": {
             "description": "OK"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
           }
         },
         "security": [
@@ -1129,6 +1390,11 @@
         "summary": "Agregar producto al carrito",
         "description": "",
         "parameters": [
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
           {
             "name": "Authorization",
             "in": "header",
@@ -1153,12 +1419,6 @@
         "responses": {
           "200": {
             "description": "OK"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
           }
         },
         "security": [
@@ -1175,6 +1435,11 @@
         "description": "",
         "parameters": [
           {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
             "name": "Authorization",
             "in": "header",
             "type": "string"
@@ -1183,12 +1448,6 @@
         "responses": {
           "204": {
             "description": "No Content"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
           }
         },
         "security": [
@@ -1213,6 +1472,11 @@
             "type": "string"
           },
           {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
             "name": "Authorization",
             "in": "header",
             "type": "string"
@@ -1233,12 +1497,6 @@
         "responses": {
           "200": {
             "description": "OK"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
           }
         },
         "security": [
@@ -1261,6 +1519,11 @@
             "type": "string"
           },
           {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
             "name": "Authorization",
             "in": "header",
             "type": "string"
@@ -1269,12 +1532,6 @@
         "responses": {
           "200": {
             "description": "OK"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
           }
         },
         "security": [
@@ -1293,6 +1550,11 @@
         "description": "",
         "parameters": [
           {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
             "name": "Authorization",
             "in": "header",
             "type": "string"
@@ -1301,12 +1563,6 @@
         "responses": {
           "201": {
             "description": "Created"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
           }
         },
         "security": [
@@ -1325,6 +1581,11 @@
         "description": "",
         "parameters": [
           {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
             "name": "Authorization",
             "in": "header",
             "type": "string"
@@ -1333,12 +1594,43 @@
         "responses": {
           "200": {
             "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/pedidos/mios/{id}": {
+      "get": {
+        "tags": [
+          "Pedidos"
+        ],
+        "summary": "Detalle de pedido del usuario autenticado",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
           },
-          "401": {
-            "description": "Unauthorized"
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
           },
-          "403": {
-            "description": "Forbidden"
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
           }
         },
         "security": [
@@ -1357,6 +1649,11 @@
         "description": "",
         "parameters": [
           {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
             "name": "Authorization",
             "in": "header",
             "type": "string"
@@ -1365,12 +1662,6 @@
         "responses": {
           "200": {
             "description": "OK"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
           }
         },
         "security": [
@@ -1395,6 +1686,11 @@
             "type": "string"
           },
           {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
+          },
+          {
             "name": "Authorization",
             "in": "header",
             "type": "string"
@@ -1403,12 +1699,55 @@
         "responses": {
           "200": {
             "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/pedidos/{id}/estado": {
+      "put": {
+        "tags": [
+          "Pedidos"
+        ],
+        "summary": "Actualizar estado de pedido",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
           },
-          "401": {
-            "description": "Unauthorized"
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "type": "string"
           },
-          "403": {
-            "description": "Forbidden"
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "estado": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
           }
         },
         "security": [

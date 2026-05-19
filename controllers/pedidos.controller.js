@@ -40,9 +40,30 @@ const misPedidos = async (req, res, next) => {
   }
 };
 
+const miPedido = async (req, res, next) => {
+  try {
+    const data = await pedidosService.getByIdParaUsuario(req.params.id, getEmail(req));
+    res.status(200).json(data);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const actualizarEstado = async (req, res, next) => {
+  try {
+    const cambio = await pedidosService.actualizarEstado(req.params.id, req.body.estado);
+    req.bitacora('pedido.estado', `Pedido ${req.params.id} cambió de estado de ${cambio.anterior} a ${cambio.nuevo}`);
+    res.status(200).json(cambio);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   confirmarCompra,
   getAll,
   get,
   misPedidos,
+  miPedido,
+  actualizarEstado,
 };

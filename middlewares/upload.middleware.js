@@ -2,6 +2,8 @@ const multer = require('multer');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const fs = require('node:fs');
+const ErrorCodes = require('../messages/error-codes');
+const { createError } = require('../utils/app-error');
 
 const uploadsDir = path.join(__dirname, '..', 'uploads');
 fs.mkdirSync(uploadsDir, { recursive: true });
@@ -20,19 +22,14 @@ const storage = multer.diskStorage({
 const fileFilter = (req, file, cb) => {
   const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
   const ext = path.extname(file.originalname).toLowerCase();
-
   const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
 
-  const isValidExtension = allowedExtensions.includes(ext);
-  const isValidMimeType = allowedMimeTypes.includes(file.mimetype);
-
-  if (isValidExtension && isValidMimeType) {
+  if (allowedExtensions.includes(ext) && allowedMimeTypes.includes(file.mimetype)) {
     cb(null, true);
-  } else {
-    const error = new Error('Tipo de archivo no permitido. Solo se aceptan imágenes (JPG, PNG, WEBP).');
-    error.statusCode = 400;
-    cb(error, false);
+    return;
   }
+
+  cb(createError(ErrorCodes.FILE_INVALID_TYPE, 400), false);
 };
 
 const upload = multer({

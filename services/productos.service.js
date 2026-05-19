@@ -1,5 +1,19 @@
 const { producto, categoria, archivo, Sequelize } = require('../models');
+const { decodeStoredText, normalizeTextInput } = require('./text.service');
+const ErrorCodes = require('../messages/error-codes');
+const { createError } = require('../utils/app-error');
 const Op = Sequelize.Op;
+
+const productoAttributes = [['id', 'productoId'], 'titulo', 'descripcion', 'precio', ['archivoid', 'archivoId']];
+
+const mapProducto = (item) => {
+  const plain = typeof item.get === 'function' ? item.get({ plain: true }) : item;
+  return {
+    ...plain,
+    titulo: decodeStoredText(plain.titulo),
+    descripcion: decodeStoredText(plain.descripcion),
+  };
+};
 
 const getAll = async (searchTerm) => {
   const filters = {};
@@ -9,22 +23,24 @@ const getAll = async (searchTerm) => {
     };
   }
 
-  return await producto.findAll({
-    where: filters,
-    attributes: [['id', 'productoId'], 'titulo', 'descripcion', 'precio', 'archivoid'],
-    include: {
-      model: categoria,
-      as: 'categorias',
-      attributes: [['id', 'categoriaId'], 'nombre', 'protegida'],
-      through: { attributes: [] },
-    },
-    subQuery: false,
-  });
+  return await producto
+    .findAll({
+      where: filters,
+      attributes: productoAttributes,
+      include: {
+        model: categoria,
+        as: 'categorias',
+        attributes: [['id', 'categoriaId'], 'nombre', 'protegida'],
+        through: { attributes: [] },
+      },
+      subQuery: false,
+    })
+    .then((items) => items.map(mapProducto));
 };
 
 const getById = async (id) => {
   const data = await producto.findByPk(id, {
-    attributes: [['id', 'productoId'], 'titulo', 'descripcion', 'precio', 'archivoid'],
+    attributes: productoAttributes,
     include: {
       model: categoria,
       as: 'categorias',
@@ -34,11 +50,9 @@ const getById = async (id) => {
   });
 
   if (!data) {
-    const error = new Error('Producto no encontrado.');
-    error.statusCode = 404;
-    throw error;
+    throw createError(ErrorCodes.PRODUCT_NOT_FOUND, 404);
   }
-  return data;
+  return mapProducto(data);
 };
 
 const create = async (productoData) => {
@@ -54,29 +68,34 @@ const create = async (productoData) => {
   }
 
   return await producto.create({
-    titulo: productoData.titulo,
-    descripcion: productoData.descripcion,
+    titulo: normalizeTextInput(productoData.titulo),
+    descripcion: normalizeTextInput(productoData.descripcion),
     precio: productoData.precio,
     archivoid,
   });
 };
 
 const update = async (id, updateData) => {
-  if (updateData.archivoId !== undefined) {
-    updateData.archivoid = updateData.archivoId;
-    delete updateData.archivoId;
+  const safeUpdateData = { ...updateData };
+  if (safeUpdateData.archivoId !== undefined) {
+    safeUpdateData.archivoid = safeUpdateData.archivoId;
+    delete safeUpdateData.archivoId;
   }
 
-  if (updateData.productoId !== undefined) {
-    delete updateData.productoId;
+  if (safeUpdateData.productoId !== undefined) {
+    delete safeUpdateData.productoId;
   }
 
-  if (updateData.categorias !== undefined) {
-    delete updateData.categorias;
+  if (safeUpdateData.categorias !== undefined) {
+    delete safeUpdateData.categorias;
   }
 
-  if (updateData.archivoid) {
-    const portada = await archivo.findByPk(updateData.archivoid);
+  if (safeUpdateData.titulo !== undefined) safeUpdateData.titulo = normalizeTextInput(safeUpdateData.titulo);
+  if (safeUpdateData.descripcion !== undefined)
+    safeUpdateData.descripcion = normalizeTextInput(safeUpdateData.descripcion);
+
+  if (safeUpdateData.archivoid) {
+    const portada = await archivo.findByPk(safeUpdateData.archivoid);
     if (!portada) {
       const error = new Error('Archivo de portada no encontrado.');
       error.statusCode = 400;
@@ -84,7 +103,7 @@ const update = async (id, updateData) => {
     }
   }
 
-  const data = await producto.update(updateData, { where: { id: id } });
+  const data = await producto.update(safeUpdateData, { where: { id: id } });
 
   if (data[0] === 0) {
     const error = new Error('Producto no encontrado.');

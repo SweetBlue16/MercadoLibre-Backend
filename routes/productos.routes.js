@@ -5,8 +5,8 @@ const { body, param } = require('express-validator');
 const Authorize = require('../middlewares/auth.middleware');
 
 const productoRules = [
-  body('titulo').notEmpty().withMessage('El título es obligatorio').trim().escape(),
-  body('descripcion').notEmpty().withMessage('La descripción es obligatoria').trim().escape(),
+  body('titulo').notEmpty().withMessage('El título es obligatorio').trim(),
+  body('descripcion').notEmpty().withMessage('La descripción es obligatoria').trim(),
   body('precio')
     .notEmpty()
     .withMessage('El precio es obligatorio')

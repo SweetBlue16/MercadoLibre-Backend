@@ -1,4 +1,6 @@
 const { carrito, producto, usuario, sequelize } = require('../models');
+const ErrorCodes = require('../messages/error-codes');
+const { createError } = require('../utils/app-error');
 
 const getUsuarioPorEmail = async (email) => {
   const data = await usuario.findOne({ where: { email } });
@@ -47,9 +49,7 @@ const agregar = async (email, productoid, cantidad = 1) => {
   const user = await getUsuarioPorEmail(email);
   const product = await producto.findByPk(productoid);
   if (!product) {
-    const error = new Error('Producto no encontrado.');
-    error.statusCode = 404;
-    throw error;
+    throw createError(ErrorCodes.PRODUCT_NOT_FOUND, 404);
   }
 
   const safeCantidad = Math.min(Math.max(Number.parseInt(cantidad, 10) || 1, 1), 99);

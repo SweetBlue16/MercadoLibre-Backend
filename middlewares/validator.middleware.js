@@ -1,17 +1,24 @@
 const { validationResult } = require('express-validator');
+const ErrorCodes = require('../messages/error-codes');
+const { createError } = require('../utils/app-error');
+
+const sanitizeField = (field) => String(field || '').replace(/[^a-zA-Z0-9_.-]/g, '');
 
 const validateRequest = (req, res, next) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    const extractedErrors = [];
-    errors.array().forEach((err) => extractedErrors.push({ [err.path]: err.msg }));
+  const result = validationResult(req);
+  if (!result.isEmpty()) {
+    const details = result.array().map((err) => ({
+      field: sanitizeField(err.path),
+      code: ErrorCodes.VALIDATION_ERROR,
+    }));
 
-    const error = new Error('Los datos proporcionados no cumplen con el formato requerido.');
-    error.statusCode = 400;
+    console.warn(
+      `[ALERTA VALIDACION] CorrelationId: ${req.correlationId || res.locals.correlationId} | IP: ${req.ip} | Campos: ${details
+        .map((item) => item.field)
+        .join(',')}`
+    );
 
-    console.error(`[ALERTA VALIDACIÓN] IP: ${req.ip} | Detalle:`, extractedErrors);
-
-    return next(error);
+    return next(createError(ErrorCodes.VALIDATION_ERROR, 400, null, details));
   }
   next();
 };

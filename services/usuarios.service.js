@@ -1,35 +1,29 @@
 const { usuario, rol, Sequelize } = require('../models');
+const { Roles } = require('../config/constants');
+const { assertStrongPassword } = require('./password-policy.service');
+const accountService = require('./account.service');
 
-const assertStrongPassword = (email, password) => {
-  const rules = [
-    password && password.length >= 12,
-    /[A-Z]/.test(password || ''),
-    /[a-z]/.test(password || ''),
-    /\d/.test(password || ''),
-    /[^A-Za-z0-9]/.test(password || ''),
-    password !== email,
-  ];
-
-  if (rules.some((isValid) => !isValid)) {
-    const error = new Error('La contraseña no cumple la politica de seguridad.');
-    error.statusCode = 400;
-    throw error;
-  }
-};
+const usuarioAttributes = [
+  'id',
+  'nombre',
+  'email',
+  ['emailconfirmado', 'emailConfirmado'],
+  [Sequelize.col('rol.nombre'), 'rol'],
+];
 
 const getAll = async () => {
   return await usuario.findAll({
     raw: true,
-    attributes: ['id', 'nombre', 'email', [Sequelize.col('rol.nombre'), 'rol']],
+    attributes: usuarioAttributes,
     include: { model: rol, attributes: [] },
   });
 };
 
 const getByEmail = async (email) => {
   const data = await usuario.findOne({
-    where: { email: email },
+    where: { email },
     raw: true,
-    attributes: ['id', 'nombre', 'email', [Sequelize.col('rol.nombre'), 'rol']],
+    attributes: usuarioAttributes,
     include: { model: rol, attributes: [] },
   });
 
@@ -44,7 +38,7 @@ const getByEmail = async (email) => {
 const create = async (usuarioData) => {
   assertStrongPassword(usuarioData.email, usuarioData.password);
 
-  const rolusuario = await rol.findOne({ where: { nombre: usuarioData.rol || 'Usuario' } });
+  const rolusuario = await rol.findOne({ where: { nombre: usuarioData.rol || Roles.Usuario } });
   if (!rolusuario) {
     const error = new Error('El rol especificado no existe.');
     error.statusCode = 400;
@@ -56,20 +50,29 @@ const create = async (usuarioData) => {
     nombre: usuarioData.nombre,
     passwordhash: usuarioData.password,
     rolid: rolusuario.id,
+    emailconfirmado: true,
   });
 
   return {
     id: newUser.id,
     email: newUser.email,
     nombre: newUser.nombre,
-    rolid: rolusuario.nombre,
+    rol: rolusuario.nombre,
+    emailConfirmado: newUser.emailconfirmado,
   };
 };
 
 const registroPublico = async (usuarioData) => {
   assertStrongPassword(usuarioData.email, usuarioData.password);
 
-  const rolusuario = await rol.findOne({ where: { nombre: 'Usuario' } });
+  const existente = await usuario.findOne({ where: { email: usuarioData.email }, attributes: ['id'] });
+  if (existente) {
+    const error = new Error('El correo electrónico ya está registrado.');
+    error.statusCode = 409;
+    throw error;
+  }
+
+  const rolusuario = await rol.findOne({ where: { nombre: Roles.Usuario } });
   if (!rolusuario) {
     const error = new Error('El rol de usuario no esta configurado.');
     error.statusCode = 500;
@@ -81,33 +84,44 @@ const registroPublico = async (usuarioData) => {
     nombre: usuarioData.nombre,
     passwordhash: usuarioData.password,
     rolid: rolusuario.id,
+    emailconfirmado: !accountService.confirmationEnabled(),
   });
+
+  if (accountService.confirmationEnabled()) {
+    await accountService.setConfirmationCode(newUser);
+  }
 
   return {
     id: newUser.id,
     email: newUser.email,
     nombre: newUser.nombre,
     rol: rolusuario.nombre,
+    emailConfirmado: newUser.emailconfirmado,
   };
 };
 
 const update = async (email, updateData) => {
-  if (updateData.rol) {
-    const rolusuario = await rol.findOne({ where: { nombre: updateData.rol } });
+  const safeData = { ...updateData };
+
+  if (safeData.rol) {
+    const rolusuario = await rol.findOne({ where: { nombre: safeData.rol } });
     if (!rolusuario) {
       const error = new Error('El rol especificado no existe.');
       error.statusCode = 400;
       throw error;
     }
-    updateData.rolid = rolusuario.id;
+    safeData.rolid = rolusuario.id;
   }
 
-  if (updateData.password) {
-    assertStrongPassword(email, updateData.password);
-    updateData.passwordhash = updateData.password;
+  if (safeData.password) {
+    assertStrongPassword(email, safeData.password);
+    safeData.passwordhash = safeData.password;
   }
 
-  const result = await usuario.update(updateData, { where: { email: email }, individualHooks: true });
+  delete safeData.password;
+  delete safeData.email;
+
+  const result = await usuario.update(safeData, { where: { email }, individualHooks: true });
 
   if (result[0] === 0) {
     const error = new Error('Usuario no encontrado.');
@@ -118,7 +132,7 @@ const update = async (email, updateData) => {
 };
 
 const eliminar = async (email) => {
-  const data = await usuario.findOne({ where: { email: email } });
+  const data = await usuario.findOne({ where: { email } });
 
   if (!data) {
     const error = new Error('Usuario no encontrado.');
@@ -132,7 +146,7 @@ const eliminar = async (email) => {
     throw error;
   }
 
-  await usuario.destroy({ where: { email: email } });
+  await usuario.destroy({ where: { email } });
   return true;
 };
 

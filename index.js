@@ -2,10 +2,16 @@ const express = require('express');
 const cors = require('cors');
 const hpp = require('hpp');
 const dotenv = require('dotenv');
+const path = require('node:path');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const crypto = require('node:crypto');
 
-dotenv.config();
+dotenv.config({ path: path.join(__dirname, '.env'), quiet: true });
+
+const ErrorCodes = require('./messages/error-codes');
+const { createError } = require('./utils/app-error');
+const emailService = require('./services/email.service');
 
 const app = express();
 const serverPort = process.env.SERVER_PORT || process.env.PORT || 3000;
@@ -18,9 +24,23 @@ if (!jwtSecret || jwtSecret.length < 32) {
 app.use(
   helmet({
     contentSecurityPolicy: false,
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
     referrerPolicy: { policy: 'no-referrer' },
   })
 );
+
+emailService.validateEmailConfiguration();
+
+app.use((req, res, next) => {
+  const incomingCorrelationId = req.header('X-Correlation-Id');
+  const correlationId = /^[a-zA-Z0-9._-]{8,80}$/.test(incomingCorrelationId || '')
+    ? incomingCorrelationId
+    : crypto.randomUUID();
+  req.correlationId = correlationId;
+  res.locals.correlationId = correlationId;
+  res.setHeader('X-Correlation-Id', correlationId);
+  next();
+});
 
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: false, limit: '10kb' }));
@@ -31,7 +51,7 @@ const limiter = rateLimit({
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
-  message: 'Demasiadas solicitudes desde esta IP, por favor intente nuevamente despues de 15 minutos',
+  handler: (req, res, next) => next(createError(ErrorCodes.SERVER_UNAVAILABLE, 429)),
 });
 app.use('/api', limiter);
 
@@ -71,9 +91,10 @@ app.use('/api/pedidos', require('./routes/pedidos.routes'));
 app.use((req, res) => {
   // #swagger.ignore = true
   res.status(404).json({
-    status: 'error',
-    statusCode: 404,
-    message: 'El recurso o endpoint solicitado no existe en el servidor.',
+    success: false,
+    code: ErrorCodes.RESOURCE_NOT_FOUND,
+    message: 'El recurso solicitado no existe.',
+    correlationId: req.correlationId || res.locals.correlationId,
   });
 });
 

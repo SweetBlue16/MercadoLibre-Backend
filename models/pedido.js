@@ -34,6 +34,11 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: false,
       },
+      estado: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: 'Recibido',
+      },
     },
     {
       sequelize,

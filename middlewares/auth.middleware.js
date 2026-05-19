@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken');
 const ClaimTypes = require('../config/claimtypes');
 const { GeneraToken } = require('../services/jwttoken.service');
+const ErrorCodes = require('../messages/error-codes');
+const { createError } = require('../utils/app-error');
 
 const Authorize = (rol) => {
   return async (req, res, next) => {
@@ -8,7 +10,7 @@ const Authorize = (rol) => {
       const authHeader = req.header('Authorization');
 
       if (!authHeader?.startsWith('Bearer ')) {
-        return res.status(401).json('Acceso denegado. Token no proporcionado o formato inválido.');
+        return next(createError(ErrorCodes.AUTH_SESSION_EXPIRED, 401));
       }
 
       const token = authHeader.split(' ')[1];
@@ -23,7 +25,7 @@ const Authorize = (rol) => {
       const userRole = decodedToken[ClaimTypes.Role];
 
       if (!rolesPermitidos.includes(userRole)) {
-        return res.status(403).json('Acceso denegado. Permisos insuficientes para esta acción.');
+        return next(createError(ErrorCodes.AUTH_FORBIDDEN, 403));
       }
 
       const timeNow = Math.floor(Date.now() / 1000);
@@ -37,10 +39,8 @@ const Authorize = (rol) => {
       req.decodedToken = decodedToken;
       next();
     } catch (error) {
-      if (error.name === 'TokenExpiredError') {
-        return res.status(401).json('El token ha expirado. Por favor, inicie sesión nuevamente.');
-      }
-      return res.status(401).json('Token inválido o corrupto.');
+      const code = error.name === 'TokenExpiredError' ? ErrorCodes.AUTH_SESSION_EXPIRED : ErrorCodes.AUTH_TOKEN_INVALID;
+      return next(createError(code, 401));
     }
   };
 };

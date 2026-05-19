@@ -1,113 +1,115 @@
-# Mercado Libre Seguro
+# Mercado Libre Seguro - Backend
 
-Proyecto final de Programacion Segura: frontend ASP.NET Core MVC separado de backend Node.js/Express con MySQL 8 y Sequelize.
+API REST Node.js/Express para el proyecto final de Programacion Segura. Usa MySQL 8, Sequelize, JWT, bcrypt, Swagger y separacion por rutas, controllers, services, modelos, migraciones y middlewares.
 
 ## Arquitectura
 
-- `MercadoLibre-Backend`: API REST Express, rutas por recurso, controllers, services, middlewares, modelos Sequelize, migraciones, seeders y Swagger en `/swagger`.
-- `MercadoLibre-Frontend`: ASP.NET Core MVC, cookies HttpOnly, servicios `HttpClient`, vistas Razor y autorizacion por roles.
-- Roles: `Administrador` gestiona productos, categorias, usuarios, archivos, bitacora y pedidos. `Usuario` compra, usa carrito y confirma pedidos.
+- `routes/`: contratos HTTP y validaciones con `express-validator`.
+- `controllers/`: adaptan request/response y bitacora.
+- `services/`: reglas de negocio de auth, usuarios, productos, archivos, carrito, pedidos, correo y politicas de password.
+- `models/` y `migrations/`: esquema Sequelize/MySQL.
+- `middlewares/`: auth por JWT/rol, uploads seguros, bitacora, validacion y errores JSON centralizados.
 
-## Backend
-
-1. Copiar `.env.example` a `.env`.
-2. Configurar `DB_DATABASE=mercadolibre`, `DB_USER=mercadolibre_user`, `DB_PASSWORD`, `JWT_SECRET` fuerte y `CORS_ORIGINS=http://localhost:8080`.
-3. Instalar dependencias:
+## Instalacion
 
 ```powershell
 npm install
-```
-
-4. Crear y poblar base:
-
-```powershell
 npm run migrate
 npm run seed
-```
-
-5. Levantar API:
-
-```powershell
+npm run swagger
 npm run start
 ```
 
-Scripts utiles: `npm run dev`, `npm run lint`, `npm test`, `npm run swagger`, `npm audit`.
+Swagger queda en `http://localhost:3000/swagger`.
 
-## Frontend
+## Variables de entorno
 
-Configurar `UrlWebAPI` en `appsettings.json` o `appsettings.Development.json`:
+Copiar `.env.example` a `.env` y configurar valores reales solo localmente. `.env` esta ignorado por Git.
 
-```json
-{
-  "UrlWebAPI": "http://localhost:3000"
-}
+Claves principales: `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_DATABASE`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `BCRYPT_SALT_ROUNDS`, `CORS_ORIGINS`, `FILES_IN_DB`.
+
+Correo/SMTP:
+
+```env
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=
+SMTP_PASSWORD=
+SMTP_FROM=
+EMAIL_CONFIRMATION_ENABLED=true
+EMAIL_DEV_MODE=true
 ```
 
-Comandos:
+Para Gmail se debe activar la verificacion en dos pasos y crear una contrasena de aplicacion. Esa contrasena de aplicacion va solo en `SMTP_PASSWORD` del `.env` local. No usar la contrasena normal de Gmail y no copiar `SMTP_PASSWORD` a README, `.env.example`, tests, logs ni commits.
+La contrasena de aplicacion debe pegarse sin espacios internos. Despues de cambiar `.env`, reiniciar el backend para que Node vuelva a cargar la configuracion.
+
+Prueba SMTP sin usar el formulario de registro:
 
 ```powershell
-dotnet restore
-dotnet build
-dotnet run --urls http://localhost:8080
+$env:SMTP_TEST_TO="correo_destino@gmail.com"
+npm run test:smtp
 ```
 
-## Endpoints Principales
+El diagnostico imprime host, puerto, usuario, remitente, banderas de correo, si `SMTP_PASSWORD` esta configurado y su longitud, pero nunca imprime el valor de `SMTP_PASSWORD`.
 
-- `POST /api/auth`: login JWT.
-- `GET /api/auth/tiempo`: tiempo restante del token.
-- `POST /api/usuarios/registro`: registro publico con rol `Usuario`.
-- `GET|POST|PUT|DELETE /api/productos`: CRUD de productos.
-- `GET|POST|PUT|DELETE /api/categorias`: CRUD de categorias.
-- `GET|POST|PUT|DELETE /api/archivos`: metadatos y subida segura de imagenes.
-- `GET /api/archivos/{id}`: binario de imagen.
-- `GET|POST|PUT|DELETE /api/carrito`: carrito de usuario autenticado.
-- `POST /api/pedidos/confirmar`: crea pedido desde carrito.
-- `GET /api/pedidos` y `GET /api/pedidos/{id}`: pedidos recibidos para administrador.
-- `GET /api/bitacora`: auditoria.
+Modo desarrollo sin SMTP: dejar `SMTP_*` sin credenciales reales y usar `EMAIL_DEV_MODE=true` en `development`; los codigos de confirmacion y recuperacion se escriben en consola con prefijo `EMAIL_DEV`. En produccion nunca se imprimen codigos. Si `EMAIL_CONFIRMATION_ENABLED=true` en produccion, SMTP debe estar completo o la API no inicia.
 
-## Seguridad Implementada
+## Cuentas de prueba
 
-- Passwords con bcrypt y politica minima: 12 caracteres, mayuscula, minuscula, numero y caracter especial.
-- JWT con secreto desde `.env`, expiracion, issuer/audience y algoritmo HS256.
-- Cookies MVC HttpOnly, SameSite Lax y Secure en produccion.
-- Antiforgery global para formularios POST del frontend.
-- Helmet, HPP, CORS con allowlist y rate limiting general/login/registro.
-- Validacion con `express-validator` y `ModelState`.
-- Uploads con UUID, limite 5 MB, extensiones jpg/jpeg/png/webp, MIME y firma binaria basica.
-- Sin SQL concatenado: acceso a datos mediante Sequelize.
-- Manejo centralizado de errores sin stack trace en produccion.
-- Bitacora para login, CRUD, carrito y pedidos.
-- `.env`, uploads de usuario y logs ignorados por Git.
+Las cuentas semilla se configuran con `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`, `SEED_USER_EMAIL` y `SEED_USER_PASSWORD`. Los usuarios semilla quedan con `emailconfirmado=true` para no bloquear la entrega.
 
-## Pruebas Realizadas
+## Flujo de imagenes
+
+- Las imagenes asociadas a productos se obtienen desde el backend.
+- Si un producto tiene `ArchivoId`/`archivoid`, el frontend debe usar `http://localhost:3000/api/archivos/{ArchivoId}`.
+- `GET /api/archivos/{id}` busca metadata en BD, resuelve el archivo dentro de `uploads`, valida ruta segura y responde bytes con el `Content-Type` real.
+- `wwwroot/images/imagenes-productos` del frontend solo es fallback local o recurso estatico auxiliar. No es la fuente principal para productos con `ArchivoId`.
+- No se deben guardar rutas fisicas en BD ni renderizarlas en HTML.
+
+## Cuenta
+
+- Registro publico: `POST /api/usuarios/registro`, siempre crea rol `Usuario`; rechaza rol enviado por el cliente.
+- Password fuerte: minimo 12 caracteres, mayuscula, minuscula, numero y caracter especial; no puede ser igual al email.
+- Correo duplicado responde `El correo electrónico ya está registrado.`.
+- Confirmacion: `POST /api/auth/confirmar-correo` y `POST /api/auth/reenviar-confirmacion`.
+- Login rechaza cuentas sin confirmar con `Debes confirmar tu correo electrónico antes de iniciar sesión.`.
+- Recuperacion: `POST /api/auth/olvide-password` devuelve mensaje generico y `POST /api/auth/restablecer-password` valida token hasheado y expiracion.
+- Cambio de password autenticado: primero `POST /api/auth/cambiar-password/enviar-codigo`; luego `POST /api/auth/cambiar-password` con codigo, password actual, nueva password y confirmacion. El codigo se guarda hasheado, expira en 15 minutos, tiene limite de intentos y se invalida al usarse.
+
+## Carrito y pedidos
+
+- `POST /api/pedidos/confirmar` crea un pedido desde el carrito con estado inicial `Recibido`.
+- `GET /api/pedidos/mios` y `GET /api/pedidos/mios/{id}` devuelven solo pedidos del usuario autenticado.
+- Admin usa `GET /api/pedidos`, `GET /api/pedidos/{id}` y `PUT /api/pedidos/{id}/estado`.
+- Estados permitidos: `Recibido`, `Procesado`, `Enviado`, `En ruta de entrega`, `Entregado`.
+- No hay pago real; el flujo de compra es visual/simulado.
+
+## Seguridad
+
+- Helmet, HPP, CORS con allowlist, `express.json` limitado y rate limit general/login/registro/confirmacion/recuperacion.
+- Las imagenes se pueden embeber desde el frontend MVC porque Helmet usa `Cross-Origin-Resource-Policy: cross-origin` y CORS mantiene allowlist.
+- JWT con secreto desde `.env`, issuer/audience, expiracion y roles.
+- Passwords con bcrypt; nunca se devuelve `passwordhash`.
+- Tokens/codigos de cuenta se guardan hasheados.
+- Uploads con UUID, limite 5 MB, MIME/extensiones permitidas, firma binaria y proteccion contra path traversal.
+- Errores centralizados en JSON seguro: `{ success, code, message, correlationId, errors? }`. Los codigos viven en `messages/error-codes.js` y los mensajes seguros en `messages/message-catalog.js`.
+- Sequelize evita SQL concatenado.
+- Bitacora registra eventos sin passwords/JWT/tokens.
+
+## Pruebas
 
 ```powershell
 npm run lint
 npm test
 npm audit --audit-level=moderate
-dotnet build
 ```
 
-Resultado esperado actual: lint y build sin errores, pruebas estaticas pasando y `npm audit` sin vulnerabilidades moderadas o mayores.
+## Checklist de entrega
 
-## Evidencias Para Rubrica
-
-- Capturas de Swagger `/swagger`.
-- Login admin y usuario.
-- Registro publico creando solo rol Usuario.
-- Productos con imagen `http://localhost:3000/api/archivos/{ArchivoId}`.
-- Carrito: agregar, actualizar cantidad, eliminar, vaciar.
-- Confirmacion de compra y pedido visible para administrador.
-- Acceso directo a rutas admin rechazado con usuario normal.
-- Bitacora registrando eventos.
-
-## Checklist De Entrega
-
-- Backend en `http://localhost:3000`.
-- Frontend en `http://localhost:8080`.
 - Migraciones aplicadas.
-- `.env` no versionado.
-- `.env.example` sin secretos reales.
-- `uploads/.gitkeep` existe y `uploads/*` esta ignorado.
 - Swagger regenerado.
-- Build y tests ejecutados.
+- `.env` ignorado y `.env.example` sin secretos reales.
+- `uploads/*` ignorado y `uploads/.gitkeep` conservado.
+- `/api/archivos/1` responde imagen valida cuando existe metadata y archivo fisico.
+- Registro, confirmacion, recuperacion, carrito, Mis pedidos y estados de pedido verificados.
