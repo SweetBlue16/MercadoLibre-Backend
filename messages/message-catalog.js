@@ -12,6 +12,7 @@ const SafeMessages = Object.freeze({
   [ErrorCodes.PASSWORD_CONFIRMATION_MISMATCH]: 'La nueva contrasena y la confirmacion no coinciden.',
   [ErrorCodes.PASSWORD_REUSE]: 'La nueva contrasena debe ser diferente a la actual.',
   [ErrorCodes.EMAIL_ALREADY_REGISTERED]: 'El correo electronico ya esta registrado.',
+  [ErrorCodes.USER_HAS_ASSOCIATED_ORDERS]: 'No se puede eliminar el usuario porque tiene pedidos asociados.',
   [ErrorCodes.EMAIL_CONFIRMATION_INVALID]: 'El codigo de confirmacion es invalido o expiro.',
   [ErrorCodes.EMAIL_CONFIRMATION_EXPIRED]: 'El codigo de confirmacion es invalido o expiro.',
   [ErrorCodes.SMTP_AUTH_FAILED_INTERNAL]: 'No fue posible enviar el correo. Intentalo nuevamente mas tarde.',

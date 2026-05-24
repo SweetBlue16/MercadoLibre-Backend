@@ -26,7 +26,17 @@ Swagger queda en `http://localhost:3000/swagger`.
 
 Copiar `.env.example` a `.env` y configurar valores reales solo localmente. `.env` esta ignorado por Git.
 
-Claves principales: `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_DATABASE`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `BCRYPT_SALT_ROUNDS`, `CORS_ORIGINS`, `FILES_IN_DB`.
+Claves principales: `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_DATABASE`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `BCRYPT_SALT_ROUNDS`, `CORS_ORIGINS`, `FILES_IN_DB`, `UPLOADS_DIR`, `MAX_IMAGE_SIZE_MB`.
+
+Archivos:
+
+```env
+FILES_IN_DB=false
+UPLOADS_DIR=./uploads
+MAX_IMAGE_SIZE_MB=5
+```
+
+Para despliegue con `FILES_IN_DB=false`, configurar `UPLOADS_DIR` apuntando a una carpeta persistente del servidor, por ejemplo `/app/uploads`. MySQL guarda metadata del archivo; el binario vive en esa carpeta. `FILES_IN_DB=true` se conserva por compatibilidad, pero no es la estrategia recomendada para despliegue.
 
 Correo/SMTP:
 
@@ -61,11 +71,31 @@ Las cuentas semilla se configuran con `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`,
 
 ## Flujo de imagenes
 
-- Las imagenes asociadas a productos se obtienen desde el backend.
-- Si un producto tiene `ArchivoId`/`archivoid`, el frontend debe usar `http://localhost:3000/api/archivos/{ArchivoId}`.
+- El frontend .NET llama a `GET /api/productos`.
+- La respuesta de cada producto incluye `archivoId`, `imagenUrl` y `archivoPrincipal` con metadata minima segura cuando existe portada.
+- `imagenUrl` es relativa, por ejemplo `/api/archivos/5`; no contiene `localhost`, rutas fisicas ni binarios.
+- Razor combina `imagenUrl` con `UrlWebAPI` y renderiza la imagen con `<img src="...">`.
 - `GET /api/archivos/{id}` busca metadata en BD, resuelve el archivo dentro de `uploads`, valida ruta segura y responde bytes con el `Content-Type` real.
+- Con `FILES_IN_DB=false`, la ruta fisica se resuelve desde `UPLOADS_DIR`; si no existe la variable, se usa `MercadoLibre-Backend/uploads`.
 - `wwwroot/images/imagenes-productos` del frontend solo es fallback local o recurso estatico auxiliar. No es la fuente principal para productos con `ArchivoId`.
 - No se deben guardar rutas fisicas en BD ni renderizarlas en HTML.
+- En localhost cada desarrollador tiene su propia carpeta `uploads`. Para ver las mismas imagenes se necesita misma BD y misma carpeta `uploads`, consumir el backend desplegado o cargar imagenes localmente.
+
+Ejemplo de despliegue con volumen persistente si se usa Docker Compose:
+
+```yaml
+services:
+  backend:
+    environment:
+      FILES_IN_DB: 'false'
+      UPLOADS_DIR: '/app/uploads'
+      MAX_IMAGE_SIZE_MB: '5'
+    volumes:
+      - uploads_data:/app/uploads
+
+volumes:
+  uploads_data:
+```
 
 ## Cuenta
 
@@ -87,7 +117,7 @@ Las cuentas semilla se configuran con `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`,
 
 ## Seguridad
 
-- Helmet, HPP, CORS con allowlist, `express.json` limitado y rate limit general/login/registro/confirmacion/recuperacion.
+- Helmet, HPP, CORS con allowlist, `express.json` limitado y rate limits por ruta. Las imagenes (`GET /api/archivos/{id}`) tienen un bucket separado y mas amplio para que la carga normal del catalogo no bloquee productos, logout ni subida de archivos. Login, registro, confirmacion, recuperacion y cambio de contrasena mantienen limiters estrictos.
 - Las imagenes se pueden embeber desde el frontend MVC porque Helmet usa `Cross-Origin-Resource-Policy: cross-origin` y CORS mantiene allowlist.
 - JWT con secreto desde `.env`, issuer/audience, expiracion y roles.
 - Passwords con bcrypt; nunca se devuelve `passwordhash`.

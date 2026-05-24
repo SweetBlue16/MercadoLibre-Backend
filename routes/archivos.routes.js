@@ -4,10 +4,15 @@ const Authorize = require('../middlewares/auth.middleware');
 const upload = require('../middlewares/upload.middleware');
 const validateRequest = require('../middlewares/validator.middleware');
 const { param } = require('express-validator');
+const {
+  fileMetadataLimiter,
+  fileMutationLimiter,
+  imageContentLimiter,
+} = require('../middlewares/rate-limiters.middleware');
 
 const idParamRules = [param('id').isInt({ min: 1 }).withMessage('El ID del archivo debe ser un entero positivo')];
 
-router.get('/', Authorize('Administrador'), (req, res, next) => {
+router.get('/', fileMetadataLimiter, Authorize('Administrador'), (req, res, next) => {
   // #swagger.tags = ['Archivos']
   // #swagger.summary = 'Listar todos los archivos (Solo Admin)'
   // #swagger.description = 'Obtiene los metadatos de todos los archivos almacenados en el sistema.'
@@ -18,7 +23,7 @@ router.get('/', Authorize('Administrador'), (req, res, next) => {
   archivosController.getAll(req, res, next);
 });
 
-router.get('/:id', idParamRules, validateRequest, (req, res, next) => {
+router.get('/:id', imageContentLimiter, idParamRules, validateRequest, (req, res, next) => {
   // #swagger.tags = ['Archivos']
   // #swagger.summary = 'Obtener binario de imagen'
   // #swagger.description = 'Devuelve el archivo binario. El ID del archivo está protegido contra inyección (CWE-89) mediante sanitización de parámetros.'
@@ -27,14 +32,21 @@ router.get('/:id', idParamRules, validateRequest, (req, res, next) => {
   archivosController.get(req, res, next);
 });
 
-router.get('/:id/detalle', Authorize('Administrador'), (req, res, next) => {
-  // #swagger.tags = ['Archivos']
-  // #swagger.summary = 'Obtener metadatos de un archivo (Solo Admin)'
-  /* #swagger.security = [{ "bearerAuth": [] }] */
-  archivosController.getDetalle(req, res, next);
-});
+router.get(
+  '/:id/detalle',
+  fileMetadataLimiter,
+  Authorize('Administrador'),
+  idParamRules,
+  validateRequest,
+  (req, res, next) => {
+    // #swagger.tags = ['Archivos']
+    // #swagger.summary = 'Obtener metadatos de un archivo (Solo Admin)'
+    /* #swagger.security = [{ "bearerAuth": [] }] */
+    archivosController.getDetalle(req, res, next);
+  }
+);
 
-router.post('/', Authorize('Administrador'), upload.single('file'), (req, res, next) => {
+router.post('/', fileMutationLimiter, Authorize('Administrador'), upload.single('file'), (req, res, next) => {
   // #swagger.tags = ['Archivos']
   // #swagger.summary = 'Subir un nuevo archivo de imagen'
   // #swagger.description = 'Endpoint blindado contra CWE-434 (Subida de archivos peligrosos). Valida estrictamente extensiones y MIME Types permitiendo solo imágenes. Renombra automáticamente el archivo con UUIDv4.'
@@ -53,6 +65,7 @@ router.post('/', Authorize('Administrador'), upload.single('file'), (req, res, n
 
 router.put(
   '/:id',
+  fileMutationLimiter,
   Authorize('Administrador'),
   upload.single('file'),
   idParamRules,
@@ -67,13 +80,20 @@ router.put(
   }
 );
 
-router.delete('/:id', Authorize('Administrador'), idParamRules, validateRequest, (req, res, next) => {
-  // #swagger.tags = ['Archivos']
-  // #swagger.summary = 'Eliminar archivo'
-  // #swagger.description = 'Elimina el registro de la BD y purga el archivo físico del disco de manera segura.'
-  /* #swagger.security = [{ "bearerAuth": [] }] */
-  /* #swagger.responses[204] = { description: 'Archivo eliminado correctamente.' } */
-  archivosController.delete(req, res, next);
-});
+router.delete(
+  '/:id',
+  fileMutationLimiter,
+  Authorize('Administrador'),
+  idParamRules,
+  validateRequest,
+  (req, res, next) => {
+    // #swagger.tags = ['Archivos']
+    // #swagger.summary = 'Eliminar archivo'
+    // #swagger.description = 'Elimina el registro de la BD y purga el archivo físico del disco de manera segura.'
+    /* #swagger.security = [{ "bearerAuth": [] }] */
+    /* #swagger.responses[204] = { description: 'Archivo eliminado correctamente.' } */
+    archivosController.delete(req, res, next);
+  }
+);
 
 module.exports = router;

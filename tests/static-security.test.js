@@ -75,6 +75,26 @@ test('api usa errores estructurados y codigos centrales', () => {
   assert.match(codes, /EMAIL_SEND_FAILED/);
 });
 
+test('eliminacion de usuario valida pedidos asociados antes de destroy', () => {
+  const service = read('services/usuarios.service.js');
+  const codes = read('messages/error-codes.js');
+  const messages = read('messages/message-catalog.js');
+  assert.match(service, /pedido\.count\(\{\s*where:\s*\{\s*usuarioid:\s*data\.id\s*\}\s*\}\)/);
+  assert.match(service, /USER_HAS_ASSOCIATED_ORDERS/);
+  assert.match(codes, /USER_HAS_ASSOCIATED_ORDERS/);
+  assert.match(messages, /No se puede eliminar el usuario porque tiene pedidos asociados/);
+});
+
+test('imagenes tienen rate limiter separado del bucket general', () => {
+  const index = read('index.js');
+  const archivosRoutes = read('routes/archivos.routes.js');
+  const limiters = read('middlewares/rate-limiters.middleware.js');
+  assert.doesNotMatch(index, /app\.use\('\/api',\s*limiter\)/);
+  assert.match(archivosRoutes, /router\.get\('\/:id',\s*imageContentLimiter/);
+  assert.match(archivosRoutes, /router\.post\('\/',\s*fileMutationLimiter/);
+  assert.match(limiters, /const imageContentLimiter[\s\S]*max:\s*600/);
+});
+
 test('helmet permite imagenes cross origin desde el frontend', () => {
   const index = read('index.js');
   assert.match(index, /crossOriginResourcePolicy:\s*\{\s*policy:\s*'cross-origin'\s*\}/);

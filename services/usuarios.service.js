@@ -1,7 +1,9 @@
-const { usuario, rol, Sequelize } = require('../models');
+const { usuario, rol, pedido, Sequelize } = require('../models');
 const { Roles } = require('../config/constants');
 const { assertStrongPassword } = require('./password-policy.service');
 const accountService = require('./account.service');
+const ErrorCodes = require('../messages/error-codes');
+const { createError } = require('../utils/app-error');
 
 const usuarioAttributes = [
   'id',
@@ -144,6 +146,11 @@ const eliminar = async (email) => {
     const error = new Error('No se puede eliminar un usuario protegido por el sistema.');
     error.statusCode = 403;
     throw error;
+  }
+
+  const pedidosAsociados = await pedido.count({ where: { usuarioid: data.id } });
+  if (pedidosAsociados > 0) {
+    throw createError(ErrorCodes.USER_HAS_ASSOCIATED_ORDERS, 409);
   }
 
   await usuario.destroy({ where: { email } });
