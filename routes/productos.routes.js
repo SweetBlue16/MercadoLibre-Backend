@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const productosController = require('../controllers/productos.controller');
 const validateRequest = require('../middlewares/validator.middleware');
-const { body, param } = require('express-validator');
+const { body, param, query } = require('express-validator');
 const Authorize = require('../middlewares/auth.middleware');
 
 const productoRules = [
@@ -22,14 +22,18 @@ const productoRules = [
     .withMessage('El archivoId debe ser un entero positivo'),
 ];
 
-const idParamRules = [param('id').notEmpty().withMessage('El ID es obligatorio')];
+const idParamRules = [param('id').isInt({ min: 1 }).withMessage('El ID debe ser un entero positivo')];
 
 const eliminaCategoriaRules = [
-  param('id').notEmpty().withMessage('El ID del producto es obligatorio'),
-  param('categoriaid').notEmpty().withMessage('El ID de la categoría es obligatorio'),
+  param('id').isInt({ min: 1 }).withMessage('El ID del producto debe ser un entero positivo'),
+  param('categoriaid').isInt({ min: 1 }).withMessage('El ID de la categoría debe ser un entero positivo'),
 ];
 
-router.get('/', Authorize('Usuario,Administrador'), (req, res, next) => {
+const productoSearchRules = [
+  query('s').optional({ nullable: true }).isString().trim().isLength({ max: 100 }).withMessage('Busqueda invalida'),
+];
+
+router.get('/', Authorize('Usuario,Administrador'), productoSearchRules, validateRequest, (req, res, next) => {
   // #swagger.tags = ['Productos']
   // #swagger.summary = 'Listar productos del catálogo'
   // #swagger.description = 'Obtiene la lista de productos y sus categorías vinculadas. Soporta búsqueda por coincidencia parcial en el título.'
@@ -85,7 +89,7 @@ router.post(
   '/:id/categoria',
   Authorize('Administrador'),
   idParamRules,
-  body('categoriaid').notEmpty().withMessage('El id de categoría es obligatorio'),
+  body('categoriaid').isInt({ min: 1 }).withMessage('El id de categoría debe ser un entero positivo'),
   validateRequest,
   (req, res, next) => {
     // #swagger.tags = ['Productos']

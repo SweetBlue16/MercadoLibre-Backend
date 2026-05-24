@@ -9,7 +9,10 @@ module.exports = (sequelize, DataTypes) => {
         through: 'categoriaproducto',
         foreignKey: 'productoid',
       });
-      producto.belongsTo(models.archivo);
+      producto.belongsTo(models.archivo, {
+        as: 'archivo',
+        foreignKey: 'archivoid',
+      });
       producto.hasMany(models.carrito, {
         foreignKey: 'productoid',
       });

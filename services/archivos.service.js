@@ -3,15 +3,11 @@ const fs = require('node:fs');
 const path = require('node:path');
 const ErrorCodes = require('../messages/error-codes');
 const { createError } = require('../utils/app-error');
-
-const uploadsDir = path.resolve(__dirname, '..', 'uploads');
+const { resolveUploadPath } = require('../config/storage');
 
 const getUploadsPath = (filename) => {
-  const safeName = path.basename(filename || '');
-  const fullPath = path.resolve(uploadsDir, safeName);
-  const relative = path.relative(uploadsDir, fullPath);
-
-  if (!safeName || relative.startsWith('..') || path.isAbsolute(relative)) {
+  const fullPath = resolveUploadPath(filename);
+  if (!fullPath) {
     throw createError(ErrorCodes.FILE_NOT_FOUND, 404);
   }
 
@@ -88,28 +84,33 @@ const create = async (fileData) => {
   let binario = null;
   let indb = false;
   const filePath = getUploadsPath(fileData.filename);
-  validarFirmaImagen(filePath, fileData.mimetype);
+  try {
+    validarFirmaImagen(filePath, fileData.mimetype);
 
-  if (process.env.FILES_IN_DB === 'true') {
-    binario = fs.readFileSync(filePath);
-    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-    indb = true;
+    if (process.env.FILES_IN_DB === 'true') {
+      binario = fs.readFileSync(filePath);
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      indb = true;
+    }
+
+    const data = await archivo.create({
+      mime: fileData.mimetype,
+      indb: indb,
+      nombre: fileData.filename,
+      size: fileData.size,
+      datos: binario,
+    });
+
+    return {
+      id: data.id,
+      mime: fileData.mimetype,
+      indb: indb,
+      nombre: fileData.filename,
+    };
+  } catch (error) {
+    if (!indb && fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    throw error;
   }
-
-  const data = await archivo.create({
-    mime: fileData.mimetype,
-    indb: indb,
-    nombre: fileData.filename,
-    size: fileData.size,
-    datos: binario,
-  });
-
-  return {
-    id: data.id,
-    mime: fileData.mimetype,
-    indb: indb,
-    nombre: fileData.filename,
-  };
 };
 
 const update = async (id, fileData) => {

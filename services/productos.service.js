@@ -1,25 +1,47 @@
 const { producto, categoria, archivo, Sequelize } = require('../models');
-const { decodeStoredText, normalizeTextInput } = require('./text.service');
+const { normalizeTextInput } = require('./text.service');
 const ErrorCodes = require('../messages/error-codes');
 const { createError } = require('../utils/app-error');
+const { mapProducto } = require('./productos.mapper');
 const Op = Sequelize.Op;
 
 const productoAttributes = [['id', 'productoId'], 'titulo', 'descripcion', 'precio', ['archivoid', 'archivoId']];
+const archivoAttributes = ['id', 'mime', 'nombre', 'size'];
 
-const mapProducto = (item) => {
-  const plain = typeof item.get === 'function' ? item.get({ plain: true }) : item;
-  return {
-    ...plain,
-    titulo: decodeStoredText(plain.titulo),
-    descripcion: decodeStoredText(plain.descripcion),
-  };
+const buildProductoIncludes = () => [
+  {
+    model: categoria,
+    as: 'categorias',
+    attributes: [['id', 'categoriaId'], 'nombre', 'protegida'],
+    through: { attributes: [] },
+  },
+  {
+    model: archivo,
+    as: 'archivo',
+    attributes: archivoAttributes,
+    required: false,
+  },
+];
+
+const normalizeSearchTerm = (searchTerm) => {
+  if (typeof searchTerm !== 'string') {
+    return null;
+  }
+
+  const trimmed = searchTerm.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  return trimmed.slice(0, 100).replace(/[\\%_]/g, '\\$&');
 };
 
 const getAll = async (searchTerm) => {
   const filters = {};
-  if (searchTerm) {
+  const safeSearchTerm = normalizeSearchTerm(searchTerm);
+  if (safeSearchTerm) {
     filters.titulo = {
-      [Op.like]: `%${searchTerm}%`,
+      [Op.like]: `%${safeSearchTerm}%`,
     };
   }
 
@@ -27,12 +49,7 @@ const getAll = async (searchTerm) => {
     .findAll({
       where: filters,
       attributes: productoAttributes,
-      include: {
-        model: categoria,
-        as: 'categorias',
-        attributes: [['id', 'categoriaId'], 'nombre', 'protegida'],
-        through: { attributes: [] },
-      },
+      include: buildProductoIncludes(),
       subQuery: false,
     })
     .then((items) => items.map(mapProducto));
@@ -41,12 +58,7 @@ const getAll = async (searchTerm) => {
 const getById = async (id) => {
   const data = await producto.findByPk(id, {
     attributes: productoAttributes,
-    include: {
-      model: categoria,
-      as: 'categorias',
-      attributes: [['id', 'categoriaId'], 'nombre', 'protegida'],
-      through: { attributes: [] },
-    },
+    include: buildProductoIncludes(),
   });
 
   if (!data) {

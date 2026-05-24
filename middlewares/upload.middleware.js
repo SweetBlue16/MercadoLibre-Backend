@@ -1,16 +1,21 @@
 const multer = require('multer');
 const path = require('node:path');
 const crypto = require('node:crypto');
-const fs = require('node:fs');
 const ErrorCodes = require('../messages/error-codes');
 const { createError } = require('../utils/app-error');
+const {
+  allowedImageExtensions,
+  allowedImageMimeTypes,
+  ensureUploadDir,
+  maxImageSizeBytes,
+  uploadDir,
+} = require('../config/storage');
 
-const uploadsDir = path.join(__dirname, '..', 'uploads');
-fs.mkdirSync(uploadsDir, { recursive: true });
+ensureUploadDir();
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadsDir);
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = crypto.randomUUID();
@@ -20,11 +25,9 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-  const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
   const ext = path.extname(file.originalname).toLowerCase();
-  const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
 
-  if (allowedExtensions.includes(ext) && allowedMimeTypes.includes(file.mimetype)) {
+  if (allowedImageExtensions.includes(ext) && allowedImageMimeTypes.includes(file.mimetype)) {
     cb(null, true);
     return;
   }
@@ -36,7 +39,7 @@ const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024,
+    fileSize: maxImageSizeBytes,
     files: 1,
   },
 });
