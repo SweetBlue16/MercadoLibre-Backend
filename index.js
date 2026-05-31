@@ -13,7 +13,7 @@ const emailService = require('./services/email.service');
 const { apiDefaultLimiter, authGeneralLimiter, productReadLimiter } = require('./middlewares/rate-limiters.middleware');
 
 const app = express();
-const serverPort = process.env.SERVER_PORT || process.env.PORT || 3000;
+const serverPort = process.env.PORT || process.env.SERVER_PORT || 3000;
 const jwtSecret = process.env.JWT_SECRET;
 
 if (!jwtSecret || jwtSecret.length < 32) {
@@ -77,6 +77,14 @@ app.use('/api/roles', apiDefaultLimiter, require('./routes/roles.routes'));
 app.use('/api/archivos', require('./routes/archivos.routes'));
 app.use('/api/carrito', apiDefaultLimiter, require('./routes/carrito.routes'));
 app.use('/api/pedidos', apiDefaultLimiter, require('./routes/pedidos.routes'));
+
+app.get('/', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: '¡API de Mercado Libre funcionando perfectamente en la nube!',
+    environment: process.env.NODE_ENV,
+  });
+});
 
 app.use((req, res) => {
   // #swagger.ignore = true
