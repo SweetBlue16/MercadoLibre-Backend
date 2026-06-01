@@ -13,6 +13,7 @@ const emailService = require('./services/email.service');
 const { apiDefaultLimiter, authGeneralLimiter, productReadLimiter } = require('./middlewares/rate-limiters.middleware');
 
 const app = express();
+app.set('trust proxy', 1);
 const serverPort = process.env.PORT || process.env.SERVER_PORT || 3000;
 const jwtSecret = process.env.JWT_SECRET;
 
