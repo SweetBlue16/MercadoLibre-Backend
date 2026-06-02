@@ -34,7 +34,11 @@ const normalizeSearchTerm = (searchTerm) => {
     return null;
   }
 
+<<<<<<< HEAD
   return normalizeTextInput(trimmed, ProductoTextLimits.Default).replace(/[\\%_]/g, '\\$&');
+=======
+  return normalizeTextInput(trimmed, 40).replace(/[\\%_]/g, String.raw`\$&`);
+>>>>>>> 8ca8b0fe18189b8cb1733c7802a93f9c76800f19
 };
 
 const getAll = async (searchTerm) => {

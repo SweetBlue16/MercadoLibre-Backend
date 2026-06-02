@@ -5,6 +5,8 @@ const isProduction = () => process.env.NODE_ENV === 'production';
 const confirmationEnabled = () => process.env.EMAIL_CONFIRMATION_ENABLED !== 'false';
 const devModeEnabled = () => process.env.EMAIL_DEV_MODE === 'true';
 
+const sanitizeLog = (str) => String(str || '').replace(/[\r\n]+/g, ' ');
+
 const hasSmtpConfig = () =>
   Boolean(
     process.env.SMTP_HOST &&
@@ -23,7 +25,7 @@ const validateEmailConfiguration = () => {
 const sendMail = async ({ to, subject, text, correlationId }) => {
   if (!hasSmtpConfig()) {
     if (!isProduction() && devModeEnabled()) {
-      console.info(`[EMAIL_DEV] Para: ${to} | Asunto: ${subject} | ${text}`);
+      console.info(`[EMAIL_DEV] Para: ${sanitizeLog(to)} | Asunto: ${sanitizeLog(subject)} | ${sanitizeLog(text)}`);
       return true;
     }
 
@@ -57,7 +59,7 @@ const sendMail = async ({ to, subject, text, correlationId }) => {
     return true;
   } catch (error) {
     console.error(
-      `[EMAIL_ERROR] code=${error.code || error.name || 'SMTP_ERROR'} responseCode=${error.responseCode || 'N/A'} correlationId=${correlationId || 'N/A'}`
+      `[EMAIL_ERROR] code=${sanitizeLog(error.code || error.name || 'SMTP_ERROR')} responseCode=${sanitizeLog(error.responseCode || 'N/A')} correlationId=${sanitizeLog(correlationId || 'N/A')}`
     );
     throw createError(ErrorCodes.EMAIL_SEND_FAILED, 503);
   }
