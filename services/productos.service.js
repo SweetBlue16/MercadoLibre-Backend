@@ -3,6 +3,7 @@ const { normalizeTextInput } = require('./text.service');
 const ErrorCodes = require('../messages/error-codes');
 const { createError } = require('../utils/app-error');
 const { mapProducto } = require('./productos.mapper');
+const { ProductoTextLimits } = require('../config/constants');
 const Op = Sequelize.Op;
 
 const productoAttributes = [['id', 'productoId'], 'titulo', 'descripcion', 'precio', ['archivoid', 'archivoId']];
@@ -33,7 +34,7 @@ const normalizeSearchTerm = (searchTerm) => {
     return null;
   }
 
-  return normalizeTextInput(trimmed, 40).replace(/[\\%_]/g, '\\$&');
+  return normalizeTextInput(trimmed, ProductoTextLimits.Default).replace(/[\\%_]/g, '\\$&');
 };
 
 const getAll = async (searchTerm) => {
@@ -81,7 +82,7 @@ const create = async (productoData) => {
 
   return await producto.create({
     titulo: normalizeTextInput(productoData.titulo),
-    descripcion: normalizeTextInput(productoData.descripcion),
+    descripcion: normalizeTextInput(productoData.descripcion, ProductoTextLimits.Descripcion),
     precio: productoData.precio,
     archivoid,
   });
@@ -104,7 +105,7 @@ const update = async (id, updateData) => {
 
   if (safeUpdateData.titulo !== undefined) safeUpdateData.titulo = normalizeTextInput(safeUpdateData.titulo);
   if (safeUpdateData.descripcion !== undefined)
-    safeUpdateData.descripcion = normalizeTextInput(safeUpdateData.descripcion);
+    safeUpdateData.descripcion = normalizeTextInput(safeUpdateData.descripcion, ProductoTextLimits.Descripcion);
 
   if (safeUpdateData.archivoid) {
     const portada = await archivo.findByPk(safeUpdateData.archivoid);

@@ -12,6 +12,22 @@ test('producto archivoid se valida como entero y no como UUID', () => {
   assert.doesNotMatch(routes, /archivoid'[\s\S]*isUUID/);
 });
 
+test('producto descripcion conserva validacion y normalizacion con limite extendido', () => {
+  const constants = read('config/constants.js');
+  const routes = read('routes/productos.routes.js');
+  const service = read('services/productos.service.js');
+  assert.match(constants, /Descripcion:\s*300/);
+  assert.match(routes, /body\('descripcion'\)[\s\S]*max:\s*ProductoTextLimits\.Descripcion/);
+  assert.match(
+    service,
+    /descripcion:\s*normalizeTextInput\(productoData\.descripcion,\s*ProductoTextLimits\.Descripcion\)/
+  );
+  assert.match(
+    service,
+    /safeUpdateData\.descripcion\s*=\s*normalizeTextInput\(safeUpdateData\.descripcion,\s*ProductoTextLimits\.Descripcion\)/
+  );
+});
+
 test('registro publico no permite asignar rol', () => {
   const routes = read('routes/usuarios.routes.js');
   assert.match(routes, /registroRules[\s\S]*body\('rol'\)\.not\(\)\.exists/);

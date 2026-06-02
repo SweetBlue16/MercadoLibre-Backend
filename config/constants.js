@@ -13,8 +13,14 @@ const PedidoEstados = Object.freeze({
 
 const PedidoEstadosPermitidos = Object.freeze(Object.values(PedidoEstados));
 
+const ProductoTextLimits = Object.freeze({
+  Default: 40,
+  Descripcion: 300,
+});
+
 module.exports = {
   Roles,
   PedidoEstados,
   PedidoEstadosPermitidos,
+  ProductoTextLimits,
 };

@@ -3,22 +3,21 @@ const productosController = require('../controllers/productos.controller');
 const validateRequest = require('../middlewares/validator.middleware');
 const { body, param, query } = require('express-validator');
 const Authorize = require('../middlewares/auth.middleware');
-
-const TEXT_MAX_LENGTH = 40;
+const { ProductoTextLimits } = require('../config/constants');
 
 const productoRules = [
   body('titulo')
     .notEmpty()
     .withMessage('El título es obligatorio')
     .trim()
-    .isLength({ max: TEXT_MAX_LENGTH })
-    .withMessage('El título no debe exceder 40 caracteres'),
+    .isLength({ max: ProductoTextLimits.Default })
+    .withMessage(`El título no debe exceder ${ProductoTextLimits.Default} caracteres`),
   body('descripcion')
     .notEmpty()
     .withMessage('La descripción es obligatoria')
     .trim()
-    .isLength({ max: TEXT_MAX_LENGTH })
-    .withMessage('La descripción no debe exceder 40 caracteres'),
+    .isLength({ max: ProductoTextLimits.Descripcion })
+    .withMessage(`La descripción no debe exceder ${ProductoTextLimits.Descripcion} caracteres`),
   body('precio')
     .notEmpty()
     .withMessage('El precio es obligatorio')
@@ -40,7 +39,7 @@ const productoSearchRules = [
     .optional({ nullable: true })
     .isString()
     .trim()
-    .isLength({ max: TEXT_MAX_LENGTH })
+    .isLength({ max: ProductoTextLimits.Default })
     .withMessage('Búsqueda inválida'),
 ];
 
