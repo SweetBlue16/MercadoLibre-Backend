@@ -49,7 +49,7 @@ const errorHandler = (err, req, res, _next) => {
   }
 
   console.error(
-    `[INCIDENTE/ERROR] Fecha: ${new Date().toISOString()} | CorrelationId: ${correlationId} | IP: ${ip} | Usuario: ${email} | Endpoint: ${req.method} ${req.originalUrl} | Status: ${statusCode} | Code: ${appError.code} | Causa: ${sanitizeLog(err.message)}`
+    `[INCIDENTE/ERROR] Fecha: ${new Date().toISOString()} | CorrelationId: ${sanitizeLog(correlationId)} | IP: ${sanitizeLog(ip)} | Usuario: ${sanitizeLog(email)} | Endpoint: ${sanitizeLog(req.method)} ${sanitizeLog(req.originalUrl)} | Status: ${statusCode} | Code: ${appError.code} | Causa: ${sanitizeLog(err.message)}`
   );
 
   if (err.stack && statusCode === 500 && process.env.NODE_ENV === 'development') {
