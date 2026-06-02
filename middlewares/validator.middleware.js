@@ -4,6 +4,8 @@ const { createError } = require('../utils/app-error');
 
 const sanitizeField = (field) => String(field || '').replace(/[^a-zA-Z0-9_.-]/g, '');
 
+const sanitizeLog = (str) => String(str || '').replace(/[\r\n]+/g, ' ');
+
 const validateRequest = (req, res, next) => {
   const result = validationResult(req);
   if (!result.isEmpty()) {
@@ -13,9 +15,9 @@ const validateRequest = (req, res, next) => {
     }));
 
     console.warn(
-      `[ALERTA VALIDACION] CorrelationId: ${req.correlationId || res.locals.correlationId} | IP: ${req.ip} | Campos: ${details
-        .map((item) => item.field)
-        .join(',')}`
+      `[ALERTA VALIDACION] CorrelationId: ${sanitizeLog(req.correlationId || res.locals.correlationId)} | IP: ${sanitizeLog(req.ip)} | Campos: ${sanitizeLog(
+        details.map((item) => item.field).join(',')
+      )}`
     );
 
     return next(createError(ErrorCodes.VALIDATION_ERROR, 400, null, details));

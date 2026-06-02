@@ -23,12 +23,12 @@ const decodeStoredText = (value) => {
   return current;
 };
 
-const HTML_TAGS = /<[^>]*>/g;
+const HTML_TAGS = /<[^>]{0,250}>/g;
 
 const removeControlChars = (value) =>
   [...value]
     .filter((character) => {
-      const code = character.charCodeAt(0);
+      const code = character.codePointAt(0);
       return code > 31 && code !== 127;
     })
     .join('');

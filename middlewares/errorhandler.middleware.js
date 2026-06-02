@@ -4,6 +4,8 @@ const ErrorCodes = require('../messages/error-codes');
 const { AppError } = require('../utils/app-error');
 const { getSafeMessage } = require('../messages/message-catalog');
 
+const sanitizeLog = (str) => String(str || '').replace(/[\r\n]+/g, ' ');
+
 const mapKnownError = (err) => {
   if (err instanceof AppError) return err;
 
@@ -47,7 +49,7 @@ const errorHandler = (err, req, res, _next) => {
   }
 
   console.error(
-    `[INCIDENTE/ERROR] Fecha: ${new Date().toISOString()} | CorrelationId: ${correlationId} | IP: ${ip} | Usuario: ${email} | Endpoint: ${req.method} ${req.originalUrl} | Status: ${statusCode} | Code: ${appError.code} | Causa: ${err.message}`
+    `[INCIDENTE/ERROR] Fecha: ${new Date().toISOString()} | CorrelationId: ${correlationId} | IP: ${ip} | Usuario: ${email} | Endpoint: ${req.method} ${req.originalUrl} | Status: ${statusCode} | Code: ${appError.code} | Causa: ${sanitizeLog(err.message)}`
   );
 
   if (err.stack && statusCode === 500 && process.env.NODE_ENV === 'development') {

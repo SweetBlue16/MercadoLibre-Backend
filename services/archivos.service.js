@@ -5,6 +5,8 @@ const ErrorCodes = require('../messages/error-codes');
 const { createError } = require('../utils/app-error');
 const { resolveUploadPath } = require('../config/storage');
 
+const sanitizeLog = (str) => String(str || '').replace(/[\r\n]+/g, ' ');
+
 const getUploadsPath = (filename) => {
   const fullPath = resolveUploadPath(filename);
   if (!fullPath) {
@@ -67,7 +69,7 @@ const getContenido = async (id) => {
   if (!data.indb) {
     const filePath = getUploadsPath(data.nombre);
     if (!fs.existsSync(filePath)) {
-      console.warn(`[ARCHIVO_NO_DISPONIBLE] id=${id} nombre=${path.basename(data.nombre)}`);
+      console.warn(`[ARCHIVO_NO_DISPONIBLE] id=${sanitizeLog(id)} nombre=${sanitizeLog(path.basename(data.nombre))}`);
       throw createError(ErrorCodes.IMAGE_NOT_AVAILABLE, 404);
     }
     imagen = fs.readFileSync(filePath);
