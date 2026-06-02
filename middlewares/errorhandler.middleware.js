@@ -30,8 +30,7 @@ const mapKnownError = (err) => {
   return new AppError(ErrorCodes.INTERNAL_ERROR, 500);
 };
 
-const errorHandler = (err, req, res, next) => {
-  void next;
+const errorHandler = (err, req, res, _next) => {
   const appError = mapKnownError(err);
   const statusCode = appError.statusCode || 500;
   const ip = requestIp.getClientIp(req);
@@ -45,6 +44,7 @@ const errorHandler = (err, req, res, next) => {
   console.error(
     `[INCIDENTE/ERROR] Fecha: ${new Date().toISOString()} | CorrelationId: ${correlationId} | IP: ${ip} | Usuario: ${email} | Endpoint: ${req.method} ${req.originalUrl} | Status: ${statusCode} | Code: ${appError.code} | Causa: ${err.message}`
   );
+
   if (err.stack && statusCode === 500 && process.env.NODE_ENV === 'development') {
     console.error(err.stack);
   }

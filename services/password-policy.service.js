@@ -3,16 +3,15 @@ const PASSWORD_POLICY_MESSAGE =
 const ErrorCodes = require('../messages/error-codes');
 const { createError } = require('../utils/app-error');
 
-const getPasswordPolicyErrors = (email, password) => {
-  const safePassword = password || '';
+const getPasswordPolicyErrors = (email, password = '') => {
   const errors = [];
 
-  if (safePassword.length < 12 || safePassword.length > 128) errors.push('longitud');
-  if (!/[A-Z]/.test(safePassword)) errors.push('mayuscula');
-  if (!/[a-z]/.test(safePassword)) errors.push('minuscula');
-  if (!/\d/.test(safePassword)) errors.push('numero');
-  if (!/[^A-Za-z0-9]/.test(safePassword)) errors.push('especial');
-  if (email && safePassword.toLowerCase() === String(email).toLowerCase()) errors.push('igual_email');
+  if (password.length < 12 || password.length > 128) errors.push('longitud');
+  if (!/[A-Z]/.test(password)) errors.push('mayuscula');
+  if (!/[a-z]/.test(password)) errors.push('minuscula');
+  if (!/\d/.test(password)) errors.push('numero');
+  if (!/[^A-Za-z0-9]/.test(password)) errors.push('especial');
+  if (email && password.toLowerCase() === String(email).toLowerCase()) errors.push('igual_email');
 
   return errors;
 };

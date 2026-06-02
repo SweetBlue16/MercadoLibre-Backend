@@ -81,19 +81,19 @@ const confirmarCorreo = async (email, codigo) => {
 
 const solicitarResetPassword = async (email) => {
   const user = await usuario.findOne({ where: { email } });
-  if (!user) return true;
 
-  if (secondsSince(user.ultimoresetpassword) < RESET_SECONDS) {
-    return true;
+  if (user && secondsSince(user.ultimoresetpassword) >= RESET_SECONDS) {
+    const code = generateSixDigitCode();
+
+    await user.update({
+      resettokenhash: hashToken(code),
+      resettokenexpira: addMinutes(RESET_MINUTES),
+      ultimoresetpassword: new Date(),
+    });
+
+    await emailService.sendPasswordResetCode(user.email, code);
   }
 
-  const code = generateSixDigitCode();
-  await user.update({
-    resettokenhash: hashToken(code),
-    resettokenexpira: addMinutes(RESET_MINUTES),
-    ultimoresetpassword: new Date(),
-  });
-  await emailService.sendPasswordResetCode(user.email, code);
   return true;
 };
 
@@ -153,14 +153,13 @@ const restablecerPassword = async (email, token, password, confirmPassword) => {
 
   const user = await usuario.findOne({ where: { email } });
   if (
-    !user ||
-    !user.resettokenhash ||
-    !user.resettokenexpira ||
-    new Date(user.resettokenexpira).getTime() < Date.now() ||
-    !constantTimeEquals(hashToken(token), user.resettokenhash)
-  ) {
-    throw createError(ErrorCodes.EMAIL_CONFIRMATION_INVALID, 400);
-  }
+  !user?.resettokenhash ||
+  !user?.resettokenexpira ||
+  new Date(user.resettokenexpira).getTime() < Date.now() ||
+  !constantTimeEquals(hashToken(token), user.resettokenhash)
+) {
+  throw createError(ErrorCodes.EMAIL_CONFIRMATION_INVALID, 400);
+}
 
   const samePassword = await bcrypt.compare(password, user.passwordhash);
   if (samePassword) {
