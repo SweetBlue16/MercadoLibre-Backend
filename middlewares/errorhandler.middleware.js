@@ -37,7 +37,6 @@ const mapKnownError = (err) => {
 };
 
 const errorHandler = (err, req, res, _next) => {
-  void _next;
   const appError = mapKnownError(err);
   const statusCode = appError.statusCode || 500;
   const ip = requestIp.getClientIp(req);

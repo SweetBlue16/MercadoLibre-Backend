@@ -33,7 +33,7 @@ const normalizeSearchTerm = (searchTerm) => {
     return null;
   }
 
-  return normalizeTextInput(trimmed, 40).replace(/[\\%_]/g, '\\$&');
+  return normalizeTextInput(trimmed, 40).replace(/[\\%_]/g, String.raw`\$&`);
 };
 
 const getAll = async (searchTerm) => {

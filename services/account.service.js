@@ -316,8 +316,7 @@ const cambiarPassword = async (email, codigo, passwordActual, passwordNueva, con
   });
 
   if (
-    !token ||
-    !token.codehash ||
+    !token?.codehash ||
     new Date(token.expiresat).getTime() < Date.now() ||
     token.attempts >= MAX_PASSWORD_CHANGE_ATTEMPTS
   ) {
