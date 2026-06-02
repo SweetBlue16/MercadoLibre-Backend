@@ -66,24 +66,24 @@ const sendMail = async ({ to, subject, text, correlationId }) => {
 const sendConfirmationCode = async (to, code, correlationId) =>
   sendMail({
     to,
-    subject: 'Codigo de confirmacion de cuenta',
-    text: `Mercado Libre PS04: tu codigo de confirmacion es ${code}. Expira en 15 minutos. No compartas este codigo.`,
+    subject: 'Código de confirmación de cuenta',
+    text: `Mercado Libre PS04: tu código de confirmación es ${code}. Expira en 15 minutos. No compartas este código.`,
     correlationId,
   });
 
 const sendPasswordResetCode = async (to, code, correlationId) =>
   sendMail({
     to,
-    subject: 'Recuperacion de contrasena',
-    text: `Mercado Libre PS04: tu codigo para restablecer la contrasena es ${code}. Expira en 30 minutos. No compartas este codigo.`,
+    subject: 'Recuperación de contraseña',
+    text: `Mercado Libre PS04: tu código para restablecer la contraseña es ${code}. Expira en 30 minutos. No compartas este código.`,
     correlationId,
   });
 
 const sendPasswordChangeCode = async (to, code, correlationId) =>
   sendMail({
     to,
-    subject: 'Verificacion para cambio de contrasena',
-    text: `Mercado Libre PS04: tu codigo para cambiar la contrasena es ${code}. Expira en 15 minutos. No compartas este codigo.`,
+    subject: 'Verificación para cambio de contraseña',
+    text: `Mercado Libre PS04: tu código para cambiar la contraseña es ${code}. Expira en 15 minutos. No compartas este código.`,
     correlationId,
   });
 

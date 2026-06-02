@@ -1,4 +1,7 @@
 const usuariosService = require('../services/usuarios.service');
+const ClaimTypes = require('../config/claimtypes');
+
+const getActorEmail = (req) => req.decodedToken?.[ClaimTypes.Name] || null;
 
 const getAll = async (req, res, next) => {
   try {
@@ -30,7 +33,7 @@ const create = async (req, res, next) => {
 
 const registroPublico = async (req, res, next) => {
   try {
-    const data = await usuariosService.registroPublico(req.body);
+    const data = await usuariosService.registroPublico(req.body, req.correlationId);
     req.bitacora('usuarios.registro', data.email);
     res.status(201).json(data);
   } catch (error) {
@@ -40,7 +43,7 @@ const registroPublico = async (req, res, next) => {
 
 const update = async (req, res, next) => {
   try {
-    await usuariosService.update(req.params.email, req.body);
+    await usuariosService.update(req.params.email, req.body, getActorEmail(req));
     req.bitacora('usuarios.editar', req.params.email);
     res.status(204).send();
   } catch (error) {
@@ -50,7 +53,7 @@ const update = async (req, res, next) => {
 
 const eliminar = async (req, res, next) => {
   try {
-    await usuariosService.eliminar(req.params.email);
+    await usuariosService.eliminar(req.params.email, getActorEmail(req));
     req.bitacora('usuarios.eliminar', req.params.email);
     res.status(204).send();
   } catch (error) {

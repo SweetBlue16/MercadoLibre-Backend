@@ -1,12 +1,12 @@
 const PASSWORD_POLICY_MESSAGE =
-  'La contrasena debe tener al menos 12 caracteres, una mayuscula, una minuscula, un numero y un caracter especial.';
+  'La contraseña debe tener 12 caracteres, una mayúscula, una minúscula, un número y un carácter especial.';
 const ErrorCodes = require('../messages/error-codes');
 const { createError } = require('../utils/app-error');
 
 const getPasswordPolicyErrors = (email, password = '') => {
   const errors = [];
 
-  if (password.length < 12 || password.length > 128) errors.push('longitud');
+  if (password.length !== 12) errors.push('longitud');
   if (!/[A-Z]/.test(password)) errors.push('mayuscula');
   if (!/[a-z]/.test(password)) errors.push('minuscula');
   if (!/\d/.test(password)) errors.push('numero');

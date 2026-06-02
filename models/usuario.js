@@ -2,6 +2,8 @@
 const { Model } = require('sequelize');
 const bcrypt = require('bcrypt');
 
+const isBcryptHash = (value) => /^\$2[aby]\$\d{2}\$/.test(String(value || ''));
+
 module.exports = (sequelize, DataTypes) => {
   class usuario extends Model {
     static associate(models) {
@@ -25,7 +27,12 @@ module.exports = (sequelize, DataTypes) => {
         primaryKey: true,
       },
       email: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(40),
+        allowNull: false,
+        unique: true,
+      },
+      normalizedemail: {
+        type: DataTypes.STRING(40),
         allowNull: false,
         unique: true,
       },
@@ -34,7 +41,7 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       nombre: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(40),
         allowNull: false,
       },
       protegido: {
@@ -86,13 +93,13 @@ module.exports = (sequelize, DataTypes) => {
       modelName: 'usuario',
       hooks: {
         beforeCreate: async (user) => {
-          if (user.passwordhash) {
+          if (user.passwordhash && !isBcryptHash(user.passwordhash)) {
             const saltRounds = Number.parseInt(process.env.BCRYPT_SALT_ROUNDS, 10) || 12;
             user.passwordhash = await bcrypt.hash(user.passwordhash, saltRounds);
           }
         },
         beforeUpdate: async (user) => {
-          if (user.changed('passwordhash')) {
+          if (user.changed('passwordhash') && !isBcryptHash(user.passwordhash)) {
             const saltRounds = Number.parseInt(process.env.BCRYPT_SALT_ROUNDS, 10) || 12;
             user.passwordhash = await bcrypt.hash(user.passwordhash, saltRounds);
           }

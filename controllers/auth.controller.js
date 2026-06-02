@@ -36,7 +36,7 @@ const confirmarCorreo = async (req, res, next) => {
 const reenviarConfirmacion = async (req, res, next) => {
   try {
     await accountService.reenviarConfirmacion(req.body.email, req.correlationId);
-    res.status(200).json({ message: 'Si la cuenta requiere confirmacion, recibiras un nuevo codigo.' });
+    res.status(200).json({ message: 'Si la cuenta requiere confirmación, recibirás un nuevo código.' });
   } catch (error) {
     next(error);
   }
@@ -79,7 +79,7 @@ const cambiarPassword = async (req, res, next) => {
       req.body.confirmPassword
     );
     req.bitacora('usuario.cambiar_password', email);
-    res.status(200).json({ message: 'Contrasena actualizada correctamente.' });
+    res.status(200).json({ message: 'Contraseña actualizada correctamente.' });
   } catch (error) {
     next(error);
   }
@@ -89,7 +89,7 @@ const logout = async (req, res, next) => {
   try {
     const email = req.decodedToken[ClaimTypes.Name];
     req.bitacora('usuario.logout', email);
-    res.status(200).json({ message: 'Tu sesion se cerro correctamente.' });
+    res.status(200).json({ message: 'Tu sesión se cerró correctamente.' });
   } catch (error) {
     next(error);
   }
@@ -100,7 +100,7 @@ const enviarCodigoCambioPassword = async (req, res, next) => {
     const email = req.decodedToken[ClaimTypes.Name];
     await accountService.solicitarCodigoCambioPassword(email, req.correlationId);
     req.bitacora('usuario.solicitar_codigo_cambio_password', email);
-    res.status(200).json({ message: 'Codigo de verificacion enviado.' });
+    res.status(200).json({ message: 'Código de verificación enviado.' });
   } catch (error) {
     next(error);
   }

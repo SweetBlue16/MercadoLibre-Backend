@@ -4,11 +4,14 @@ const { assertStrongPassword } = require('./password-policy.service');
 const accountService = require('./account.service');
 const ErrorCodes = require('../messages/error-codes');
 const { createError } = require('../utils/app-error');
+const { normalizeEmailForLookup, normalizeEmailForStorage } = require('./email-normalization.service');
+const { normalizeTextInput } = require('./text.service');
 
 const usuarioAttributes = [
   'id',
   'nombre',
   'email',
+  'normalizedemail',
   ['emailconfirmado', 'emailConfirmado'],
   [Sequelize.col('rol.nombre'), 'rol'],
 ];
@@ -23,33 +26,32 @@ const getAll = async () => {
 
 const getByEmail = async (email) => {
   const data = await usuario.findOne({
-    where: { email },
+    where: { normalizedemail: normalizeEmailForLookup(email) },
     raw: true,
     attributes: usuarioAttributes,
     include: { model: rol, attributes: [] },
   });
 
   if (!data) {
-    const error = new Error('Usuario no encontrado.');
-    error.statusCode = 404;
-    throw error;
+    throw createError(ErrorCodes.RESOURCE_NOT_FOUND, 404);
   }
   return data;
 };
 
 const create = async (usuarioData) => {
-  assertStrongPassword(usuarioData.email, usuarioData.password);
+  const email = normalizeEmailForStorage(usuarioData.email);
+  const normalizedemail = normalizeEmailForLookup(email);
+  assertStrongPassword(email, usuarioData.password);
 
   const rolusuario = await rol.findOne({ where: { nombre: usuarioData.rol || Roles.Usuario } });
   if (!rolusuario) {
-    const error = new Error('El rol especificado no existe.');
-    error.statusCode = 400;
-    throw error;
+    throw createError(ErrorCodes.VALIDATION_ERROR, 400);
   }
 
   const newUser = await usuario.create({
-    email: usuarioData.email,
-    nombre: usuarioData.nombre,
+    email,
+    normalizedemail,
+    nombre: normalizeTextInput(usuarioData.nombre),
     passwordhash: usuarioData.password,
     rolid: rolusuario.id,
     emailconfirmado: true,
@@ -64,88 +66,56 @@ const create = async (usuarioData) => {
   };
 };
 
-const registroPublico = async (usuarioData) => {
-  assertStrongPassword(usuarioData.email, usuarioData.password);
-
-  const existente = await usuario.findOne({ where: { email: usuarioData.email }, attributes: ['id'] });
-  if (existente) {
-    const error = new Error('El correo electrónico ya está registrado.');
-    error.statusCode = 409;
-    throw error;
-  }
-
-  const rolusuario = await rol.findOne({ where: { nombre: Roles.Usuario } });
-  if (!rolusuario) {
-    const error = new Error('El rol de usuario no esta configurado.');
-    error.statusCode = 500;
-    throw error;
-  }
-
-  const newUser = await usuario.create({
-    email: usuarioData.email,
-    nombre: usuarioData.nombre,
-    passwordhash: usuarioData.password,
-    rolid: rolusuario.id,
-    emailconfirmado: !accountService.confirmationEnabled(),
-  });
-
-  if (accountService.confirmationEnabled()) {
-    await accountService.setConfirmationCode(newUser);
-  }
-
-  return {
-    id: newUser.id,
-    email: newUser.email,
-    nombre: newUser.nombre,
-    rol: rolusuario.nombre,
-    emailConfirmado: newUser.emailconfirmado,
-  };
+const registroPublico = async (usuarioData, correlationId) => {
+  return await accountService.crearRegistroPendiente(usuarioData, correlationId);
 };
 
-const update = async (email, updateData) => {
-  const safeData = { ...updateData };
+const update = async (email, updateData, actorEmail = null) => {
+  const safeData = {};
+  const targetNormalizedEmail = normalizeEmailForLookup(email);
+  const actorNormalizedEmail = actorEmail ? normalizeEmailForLookup(actorEmail) : null;
 
-  if (safeData.rol) {
-    const rolusuario = await rol.findOne({ where: { nombre: safeData.rol } });
+  if (updateData.nombre !== undefined) {
+    safeData.nombre = normalizeTextInput(updateData.nombre);
+  }
+
+  if (updateData.rol !== undefined) {
+    if (actorNormalizedEmail === targetNormalizedEmail) {
+      throw createError(ErrorCodes.AUTH_FORBIDDEN, 403);
+    }
+
+    const rolusuario = await rol.findOne({ where: { nombre: updateData.rol } });
     if (!rolusuario) {
-      const error = new Error('El rol especificado no existe.');
-      error.statusCode = 400;
-      throw error;
+      throw createError(ErrorCodes.VALIDATION_ERROR, 400);
     }
     safeData.rolid = rolusuario.id;
   }
 
-  if (safeData.password) {
-    assertStrongPassword(email, safeData.password);
-    safeData.passwordhash = safeData.password;
-  }
-
-  delete safeData.password;
-  delete safeData.email;
-
-  const result = await usuario.update(safeData, { where: { email }, individualHooks: true });
+  const result = await usuario.update(safeData, {
+    where: { normalizedemail: targetNormalizedEmail },
+    individualHooks: true,
+  });
 
   if (result[0] === 0) {
-    const error = new Error('Usuario no encontrado.');
-    error.statusCode = 404;
-    throw error;
+    throw createError(ErrorCodes.RESOURCE_NOT_FOUND, 404);
   }
   return true;
 };
 
-const eliminar = async (email) => {
-  const data = await usuario.findOne({ where: { email } });
+const eliminar = async (email, actorEmail = null) => {
+  const normalizedemail = normalizeEmailForLookup(email);
+  if (actorEmail && normalizeEmailForLookup(actorEmail) === normalizedemail) {
+    throw createError(ErrorCodes.AUTH_FORBIDDEN, 403);
+  }
+
+  const data = await usuario.findOne({ where: { normalizedemail } });
 
   if (!data) {
-    const error = new Error('Usuario no encontrado.');
-    error.statusCode = 404;
-    throw error;
+    throw createError(ErrorCodes.RESOURCE_NOT_FOUND, 404);
   }
 
   if (data.protegido) {
-    const error = new Error('No se puede eliminar un usuario protegido por el sistema.');
-    error.statusCode = 403;
-    throw error;
+    throw createError(ErrorCodes.AUTH_FORBIDDEN, 403);
   }
 
   const pedidosAsociados = await pedido.count({ where: { usuarioid: data.id } });
@@ -153,7 +123,7 @@ const eliminar = async (email) => {
     throw createError(ErrorCodes.USER_HAS_ASSOCIATED_ORDERS, 409);
   }
 
-  await usuario.destroy({ where: { email } });
+  await usuario.destroy({ where: { normalizedemail } });
   return true;
 };
 

@@ -17,18 +17,31 @@ test('registro publico no permite asignar rol', () => {
   assert.match(routes, /registroRules[\s\S]*body\('rol'\)\.not\(\)\.exists/);
 });
 
-test('registro publico valida correo duplicado con mensaje controlado', () => {
+test('registro publico no crea usuario definitivo antes de confirmar', () => {
   const service = read('services/usuarios.service.js');
-  assert.match(service, /El correo electrónico ya está registrado/);
-  assert.match(service, /statusCode = 409/);
+  const account = read('services/account.service.js');
+  assert.match(service, /crearRegistroPendiente/);
+  assert.match(account, /pendinguserregistration\.create/);
+  assert.match(account, /usuario\.create/);
+  assert.match(account, /sequelize\.transaction/);
 });
 
 test('flujos de password y correo usan tokens hasheados', () => {
   const account = read('services/account.service.js');
   assert.match(account, /hashToken\(code\)/);
   assert.match(account, /hashToken\(token\)/);
-  assert.doesNotMatch(account, /codigoconfirmacionhash:\s*code/);
+  assert.doesNotMatch(account, /codehash:\s*code/);
   assert.doesNotMatch(account, /resettokenhash:\s*code/);
+});
+
+test('normalizacion de email se usa para login y usuarios', () => {
+  const auth = read('services/auth.service.js');
+  const users = read('services/usuarios.service.js');
+  const normalizer = read('services/email-normalization.service.js');
+  assert.match(auth, /normalizeEmailForLookup/);
+  assert.match(users, /normalizedemail/);
+  assert.match(normalizer, /gmail\.com/);
+  assert.match(normalizer, /replaceAll\('\.', ''\)/);
 });
 
 test('pedido tiene estados permitidos y endpoint admin para actualizar', () => {
@@ -71,7 +84,8 @@ test('api usa errores estructurados y codigos centrales', () => {
   const codes = read('messages/error-codes.js');
   assert.match(errorHandler, /success: false/);
   assert.match(errorHandler, /correlationId/);
-  assert.match(codes, /AUTH_INVALID_CREDENTIALS/);
+  assert.match(codes, /INVALID_CREDENTIALS/);
+  assert.match(codes, /USER_NOT_FOUND/);
   assert.match(codes, /EMAIL_SEND_FAILED/);
 });
 
@@ -83,6 +97,15 @@ test('eliminacion de usuario valida pedidos asociados antes de destroy', () => {
   assert.match(service, /USER_HAS_ASSOCIATED_ORDERS/);
   assert.match(codes, /USER_HAS_ASSOCIATED_ORDERS/);
   assert.match(messages, /No se puede eliminar el usuario porque tiene pedidos asociados/);
+});
+
+test('usuarios no permite cambio de rol ni eliminacion sobre el actor autenticado', () => {
+  const controller = read('controllers/usuarios.controller.js');
+  const service = read('services/usuarios.service.js');
+  assert.match(controller, /getActorEmail/);
+  assert.match(service, /actorNormalizedEmail === targetNormalizedEmail/);
+  assert.match(service, /normalizeEmailForLookup\(actorEmail\) === normalizedemail/);
+  assert.match(service, /AUTH_FORBIDDEN/);
 });
 
 test('imagenes tienen rate limiter separado del bucket general', () => {

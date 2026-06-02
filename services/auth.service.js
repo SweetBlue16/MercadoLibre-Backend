@@ -4,17 +4,18 @@ const { GeneraToken } = require('./jwttoken.service');
 const accountService = require('./account.service');
 const ErrorCodes = require('../messages/error-codes');
 const { createError } = require('../utils/app-error');
+const { normalizeEmailForLookup } = require('./email-normalization.service');
 
 const login = async (email, password) => {
   const data = await usuario.findOne({
-    where: { email: email },
+    where: { normalizedemail: normalizeEmailForLookup(email) },
     raw: true,
     attributes: ['id', 'email', 'passwordhash', 'nombre', 'emailconfirmado', [Sequelize.col('rol.nombre'), 'rol']],
     include: { model: rol, attributes: [] },
   });
 
   if (!data) {
-    throw createError(ErrorCodes.AUTH_INVALID_CREDENTIALS, 401);
+    throw createError(ErrorCodes.USER_NOT_FOUND, 401);
   }
 
   const passwordMatch = await bcrypt.compare(password, data.passwordhash);

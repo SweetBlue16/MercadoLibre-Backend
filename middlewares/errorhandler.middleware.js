@@ -15,6 +15,10 @@ const mapKnownError = (err) => {
     return new AppError(ErrorCodes.VALIDATION_ERROR, 400);
   }
 
+  if (err.name === 'MulterError' && err.code === 'LIMIT_FILE_SIZE') {
+    return new AppError(ErrorCodes.FILE_TOO_LARGE, 400);
+  }
+
   if (err.name === 'MulterError') {
     return new AppError(ErrorCodes.FILE_UPLOAD_FAILED, 400);
   }
@@ -31,6 +35,7 @@ const mapKnownError = (err) => {
 };
 
 const errorHandler = (err, req, res, _next) => {
+  void _next;
   const appError = mapKnownError(err);
   const statusCode = appError.statusCode || 500;
   const ip = requestIp.getClientIp(req);

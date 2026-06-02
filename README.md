@@ -51,8 +51,8 @@ EMAIL_CONFIRMATION_ENABLED=true
 EMAIL_DEV_MODE=true
 ```
 
-Para Gmail se debe activar la verificacion en dos pasos y crear una contrasena de aplicacion. Esa contrasena de aplicacion va solo en `SMTP_PASSWORD` del `.env` local. No usar la contrasena normal de Gmail y no copiar `SMTP_PASSWORD` a README, `.env.example`, tests, logs ni commits.
-La contrasena de aplicacion debe pegarse sin espacios internos. Despues de cambiar `.env`, reiniciar el backend para que Node vuelva a cargar la configuracion.
+Para Gmail se debe activar la verificación en dos pasos y crear una contraseña de aplicación. Esa contraseña de aplicación va solo en `SMTP_PASSWORD` del `.env` local. No usar la contraseña normal de Gmail y no copiar `SMTP_PASSWORD` a README, `.env.example`, tests, logs ni commits.
+La contraseña de aplicación debe pegarse sin espacios internos. Después de cambiar `.env`, reiniciar el backend para que Node vuelva a cargar la configuración.
 
 Prueba SMTP sin usar el formulario de registro:
 
@@ -117,7 +117,7 @@ volumes:
 
 ## Seguridad
 
-- Helmet, HPP, CORS con allowlist, `express.json` limitado y rate limits por ruta. Las imagenes (`GET /api/archivos/{id}`) tienen un bucket separado y mas amplio para que la carga normal del catalogo no bloquee productos, logout ni subida de archivos. Login, registro, confirmacion, recuperacion y cambio de contrasena mantienen limiters estrictos.
+- Helmet, HPP, CORS con allowlist, `express.json` limitado y rate limits por ruta. Las imágenes (`GET /api/archivos/{id}`) tienen un bucket separado y más amplio para que la carga normal del catálogo no bloquee productos, logout ni subida de archivos. Login, registro, confirmación, recuperación y cambio de contraseña mantienen limiters estrictos.
 - Las imagenes se pueden embeber desde el frontend MVC porque Helmet usa `Cross-Origin-Resource-Policy: cross-origin` y CORS mantiene allowlist.
 - JWT con secreto desde `.env`, issuer/audience, expiracion y roles.
 - Passwords con bcrypt; nunca se devuelve `passwordhash`.

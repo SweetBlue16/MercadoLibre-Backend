@@ -7,6 +7,10 @@ const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 const ErrorCodes = require('../messages/error-codes');
 const { createError } = require('../utils/app-error');
 
+const EMAIL_MAX_LENGTH = 40;
+const PASSWORD_LENGTH = 12;
+const CODE_PATTERN = /^\d{6}$/;
+
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 8,
@@ -16,47 +20,45 @@ const loginLimiter = rateLimit({
   handler: (req, res, next) => next(createError(ErrorCodes.SERVER_UNAVAILABLE, 429)),
 });
 
-const loginRules = [
-  body('email')
-    .notEmpty()
-    .withMessage('El email es obligatorio')
-    .isEmail()
-    .withMessage('Debe ser un correo electrónico válido')
-    .normalizeEmail(),
+const emailRule = body('email')
+  .notEmpty()
+  .withMessage('El email es obligatorio')
+  .isEmail()
+  .withMessage('Debe ser un correo electrónico válido')
+  .isLength({ max: EMAIL_MAX_LENGTH })
+  .withMessage('El correo no debe exceder 40 caracteres')
+  .trim();
 
+const loginRules = [
+  emailRule,
   body('password')
     .notEmpty()
     .withMessage('La contraseña es obligatoria')
     .isString()
     .withMessage('Formato de contraseña inválido')
-    .isLength({ min: 8, max: 64 })
-    .withMessage('Longitud de contraseña fuera de rango')
-    .trim(),
+    .isLength({ max: PASSWORD_LENGTH })
+    .withMessage('La contraseña no debe exceder 12 caracteres'),
 ];
-
-const emailRule = body('email')
-  .notEmpty()
-  .withMessage('El email es obligatorio')
-  .isEmail()
-  .withMessage('Debe ser un correo electronico valido')
-  .normalizeEmail();
 
 const strongPasswordRule = (field) =>
   body(field)
     .notEmpty()
-    .withMessage('La contrasena es obligatoria')
-    .isLength({ min: 12, max: 128 })
-    .withMessage('La contrasena debe tener entre 12 y 128 caracteres')
+    .withMessage('La contraseña es obligatoria')
+    .isLength({ min: PASSWORD_LENGTH, max: PASSWORD_LENGTH })
+    .withMessage('La contraseña debe tener 12 caracteres')
     .matches(/[A-Z]/)
-    .withMessage('La contrasena debe incluir una mayuscula')
+    .withMessage('La contraseña debe incluir una mayúscula')
     .matches(/[a-z]/)
-    .withMessage('La contrasena debe incluir una minuscula')
+    .withMessage('La contraseña debe incluir una minúscula')
     .matches(/\d/)
-    .withMessage('La contrasena debe incluir un numero')
+    .withMessage('La contraseña debe incluir un número')
     .matches(/[^A-Za-z0-9]/)
-    .withMessage('La contrasena debe incluir un caracter especial')
+    .withMessage('La contraseña debe incluir un carácter especial')
     .custom((value, { req }) => value.toLowerCase() !== String(req.body.email || '').toLowerCase())
-    .withMessage('La contrasena no puede ser igual al correo');
+    .withMessage('La contraseña no puede ser igual al correo');
+
+const codeRule = (field = 'codigo', message = 'El código de verificación no es válido.') =>
+  body(field).matches(CODE_PATTERN).withMessage(message).trim();
 
 const confirmationLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -75,58 +77,32 @@ const resetLimiter = rateLimit({
 });
 
 router.post('/', loginLimiter, loginRules, validateRequest, (req, res, next) => {
-  // #swagger.tags = ['Autenticación']
-  // #swagger.summary = 'Iniciar sesión y obtener JWT'
-  // #swagger.description = 'Genera un JWT seguro firmado con HS256. Las entradas están fuertemente validadas para evitar inyección SQL (CWE-89) y desbordamientos.'
-  /* #swagger.parameters['body'] = {
-        in: 'body',
-        description: 'Credenciales de acceso',
-        schema: {
-            email: "admin@test.com",
-            password: "password123"
-        }
-  } */
-  /* #swagger.responses[200] = { description: 'Autenticación exitosa, retorna el JWT.' } */
-  /* #swagger.responses[400] = { description: 'Datos mal formados detectados por express-validator.' } */
-  /* #swagger.responses[401] = { description: 'Credenciales incorrectas (Manejo genérico para evitar filtración de usuarios existentes).' } */
   authController.login(req, res, next);
 });
 
 router.get('/tiempo', Authorize('Usuario,Administrador'), (req, res, next) => {
-  // #swagger.tags = ['Autenticación']
-  // #swagger.summary = 'Consultar tiempo restante del token'
-  /* #swagger.security = [{ "bearerAuth": [] }] */
   authController.tiempo(req, res, next);
 });
 
 router.post('/logout', Authorize('Usuario,Administrador'), (req, res, next) => {
-  // #swagger.tags = ['Autenticacion']
-  // #swagger.summary = 'Registrar cierre de sesion'
-  /* #swagger.security = [{ "bearerAuth": [] }] */
   authController.logout(req, res, next);
 });
 
 router.post(
   '/confirmar-correo',
   confirmationLimiter,
-  [emailRule, body('codigo').isLength({ min: 6, max: 64 }).withMessage('Codigo invalido').trim()],
+  [emailRule, codeRule('codigo', 'Ingresa el código de verificación.')],
   validateRequest,
   (req, res, next) => {
-    // #swagger.tags = ['Autenticacion']
-    // #swagger.summary = 'Confirmar correo electronico'
     authController.confirmarCorreo(req, res, next);
   }
 );
 
 router.post('/reenviar-confirmacion', confirmationLimiter, [emailRule], validateRequest, (req, res, next) => {
-  // #swagger.tags = ['Autenticacion']
-  // #swagger.summary = 'Reenviar codigo de confirmacion'
   authController.reenviarConfirmacion(req, res, next);
 });
 
 router.post('/olvide-password', resetLimiter, [emailRule], validateRequest, (req, res, next) => {
-  // #swagger.tags = ['Autenticacion']
-  // #swagger.summary = 'Solicitar recuperacion de password'
   authController.solicitarResetPassword(req, res, next);
 });
 
@@ -135,26 +111,21 @@ router.post(
   resetLimiter,
   [
     emailRule,
-    body('token').isLength({ min: 6, max: 128 }).withMessage('Token invalido').trim(),
+    codeRule('token', 'Código inválido.'),
     strongPasswordRule('password'),
     body('confirmPassword')
       .notEmpty()
-      .withMessage('La confirmacion es obligatoria')
+      .withMessage('La confirmación es obligatoria')
       .custom((value, { req }) => value === req.body.password)
-      .withMessage('Las contrasenas no coinciden'),
+      .withMessage('Las contraseñas no coinciden'),
   ],
   validateRequest,
   (req, res, next) => {
-    // #swagger.tags = ['Autenticacion']
-    // #swagger.summary = 'Restablecer password'
     authController.restablecerPassword(req, res, next);
   }
 );
 
 router.post('/cambiar-password/enviar-codigo', Authorize('Usuario,Administrador'), resetLimiter, (req, res, next) => {
-  // #swagger.tags = ['Autenticacion']
-  // #swagger.summary = 'Enviar codigo para cambio de password del usuario autenticado'
-  /* #swagger.security = [{ "bearerAuth": [] }] */
   authController.enviarCodigoCambioPassword(req, res, next);
 });
 
@@ -162,20 +133,21 @@ router.post(
   '/cambiar-password',
   Authorize('Usuario,Administrador'),
   [
-    body('codigo').isLength({ min: 6, max: 64 }).withMessage('Codigo invalido').trim(),
-    body('passwordActual').notEmpty().withMessage('La contrasena actual es obligatoria'),
+    codeRule(),
+    body('passwordActual')
+      .notEmpty()
+      .withMessage('La contraseña actual es obligatoria')
+      .isLength({ max: PASSWORD_LENGTH })
+      .withMessage('La contraseña actual no debe exceder 12 caracteres'),
     strongPasswordRule('passwordNueva'),
     body('confirmPassword')
       .notEmpty()
-      .withMessage('La confirmacion es obligatoria')
+      .withMessage('La confirmación es obligatoria')
       .custom((value, { req }) => value === req.body.passwordNueva)
-      .withMessage('Las contrasenas no coinciden'),
+      .withMessage('Las contraseñas no coinciden'),
   ],
   validateRequest,
   (req, res, next) => {
-    // #swagger.tags = ['Autenticacion']
-    // #swagger.summary = 'Cambiar password del usuario autenticado'
-    /* #swagger.security = [{ "bearerAuth": [] }] */
     authController.cambiarPassword(req, res, next);
   }
 );

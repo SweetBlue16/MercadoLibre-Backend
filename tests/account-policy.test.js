@@ -12,7 +12,7 @@ test('password igual al email es rechazada', () => {
 });
 
 test('password fuerte cumple politica compartida', () => {
-  assert.deepEqual(getPasswordPolicyErrors('user@example.com', 'Zx3&Pv$Mn7!aRbT2'), []);
+  assert.deepEqual(getPasswordPolicyErrors('user@example.com', 'Zx3&Pv$Mn7!A'), []);
 });
 
 test('estados de pedido solo incluyen lista blanca del flujo visual', () => {

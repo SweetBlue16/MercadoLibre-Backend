@@ -2,6 +2,8 @@
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 
+const normalizeEmailForLookup = (email) => String(email || '').trim().toLowerCase();
+
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
@@ -29,10 +31,14 @@ module.exports = {
       },
     ]);
 
+    const adminEmail = process.env.SEED_ADMIN_EMAIL || 'admin@example.com';
+    const userEmail = process.env.SEED_USER_EMAIL || 'user@example.com';
+
     await queryInterface.bulkInsert('usuario', [
       {
         id: crypto.randomUUID(),
-        email: process.env.SEED_ADMIN_EMAIL || 'admin@example.com',
+        email: adminEmail,
+        normalizedemail: normalizeEmailForLookup(adminEmail),
         passwordhash: await bcrypt.hash(adminPassword, 10),
         nombre: 'Guillermo Vera',
         rolid: AdministradorUUID,
@@ -43,7 +49,8 @@ module.exports = {
       },
       {
         id: crypto.randomUUID(),
-        email: process.env.SEED_USER_EMAIL || 'user@example.com',
+        email: userEmail,
+        normalizedemail: normalizeEmailForLookup(userEmail),
         passwordhash: await bcrypt.hash(userPassword, 10),
         nombre: 'Usuario patito',
         rolid: UsuarioUUID,

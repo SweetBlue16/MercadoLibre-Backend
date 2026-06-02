@@ -23,7 +23,21 @@ const decodeStoredText = (value) => {
   return current;
 };
 
-const normalizeTextInput = (value) => decodeStoredText(String(value || '').trim());
+const HTML_TAGS = /<[^>]*>/g;
+
+const removeControlChars = (value) =>
+  [...value]
+    .filter((character) => {
+      const code = character.charCodeAt(0);
+      return code > 31 && code !== 127;
+    })
+    .join('');
+
+const normalizeTextInput = (value, maxLength = 40) =>
+  removeControlChars(decodeStoredText(String(value || '')))
+    .replace(HTML_TAGS, '')
+    .trim()
+    .slice(0, maxLength);
 
 module.exports = {
   decodeStoredText,
